@@ -36,6 +36,10 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "letsencrypt": "^1.4.3"
+    "connect-livereload": "^0.5.4",
+    "express": "^4.13.4",
+    "letsencrypt": "^1.4.3",
+    "npid": "^0.4.0",
+    "winston": "^2.2.0"
   }
 }

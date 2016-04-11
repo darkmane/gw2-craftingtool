@@ -24,6 +24,10 @@ var historyApiFallback = require('connect-history-api-fallback');
 var packageJson = require('./package.json');
 var crypto = require('crypto');
 var ensureFiles = require('./tasks/ensure-files.js');
+var gw2 = require('./app/scripts/gw2.js')
+var file = require('gulp-file');
+var http_request = require('request');
+var through2 = require('through2');
 
 // var ghPages = require('gulp-gh-pages');
 
@@ -44,6 +48,7 @@ var DIST = 'dist';
 var dist = function(subpath) {
   return !subpath ? DIST : path.join(DIST, subpath);
 };
+var baseURI = "https://api.guildwars2.com";
 
 var styleTask = function(stylesPath, srcs) {
   return gulp.src(srcs.map(function(src) {
@@ -95,6 +100,66 @@ var optimizeHtmlTask = function(src, dest) {
       title: 'html'
     }));
 };
+
+// Compile GW2 Item list
+gulp.task('generate-data', function () {
+  var data = ''
+  var output = [];
+  return http_request.get(baseURI + '/v2/items').on('error', function(err){
+    console.log(err)
+  }).pipe(through2.obj(function (chunk, enc, callback){
+    data += chunk;
+    callback();
+  },
+  function(callback){
+    var item_list = JSON.parse(data);
+		var sub_array = item_list.splice(0, 99);
+
+		do {
+
+			this.push(sub_array);
+			sub_array = item_list.splice(0, 99);
+
+		}while(item_list.length > 0);
+
+    callback();
+  })).pipe(through2.obj(
+    function(chunk, enc, callback){
+
+			http_request.get(baseURI + '/v2/items?ids=' + chunk.toString(), function(error, response, body) {
+			  var items = JSON.parse(body);
+        for(var counter = 0; counter < items.length; counter ++ ){
+          var item=items[counter];
+          if(counter == 0){
+            console.log(item.name)
+          }
+          var typeAndSubtype = getItemTypeIdAndSubtypeId(item.type, item.details);
+          output.push({id: item.id, name: item.name, type_id: typeAndSubtype.typeId,
+            subtype_id: typeAndSubtype.subTypeId});
+        }
+        callback();
+			});
+
+    }, function(callback){
+      output = output.sort(function(a, b){
+        if(a.name > b.name)
+          return 1;
+        if(a.name < b.name)
+          return -1;
+
+        return 0;
+      });
+      var writer = fs.createWriteStream('app/scripts/itemlist.json');
+      writer.write(JSON.stringify(output));
+      var lookupByNameWriter = fs.createWriteStream('app/scripts/itemtypebyname.json');
+      lookupByNameWriter.write(JSON.stringify(TypeLookupHash));
+      var lookupByIdWriter = fs.createWriteStream('app/scripts/itemtypebyid.json');
+      lookupByIdWriter.write(JSON.stringify(convertTypeHash2Array(TypeLookupHash)));
+
+      callback(null, output)
+    }
+  ));
+});
 
 // Compile and automatically prefix stylesheets
 gulp.task('styles', function() {
@@ -158,7 +223,7 @@ gulp.task('fonts', function() {
 // Scan your HTML for assets & optimize them
 gulp.task('html', function() {
   return optimizeHtmlTask(
-    ['app/**/*.html', '!app/{elements,test,bower_components}/**/*.html'],
+    ['app/**/*.html', 'app/**/*.json', '!app/{elements,test,bower_components}/**/*.html'],
     dist());
 });
 
@@ -234,7 +299,7 @@ gulp.task('serve', ['styles', 'elements'], function() {
     // https: true,
     server: {
       baseDir: ['.tmp', 'app'],
-      middleware: [historyApiFallback(), addCORSHeader]
+      middleware: [historyApiFallback()]
     }
   });
 
@@ -307,7 +372,172 @@ try {
   require('require-dir')('tasks');
 } catch (err) {}
 
-function addCORSHeader(req, resp) {
-  resp.setHeader("Access-Control-Allow-Origin", "https://api.guildwars2.com");
+var TypeLookupHash = {
+  'Armor': {
+    typeId: 0, subTypes: {
+      'Boots': 0,
+      'Coat': 1,
+      'Gloves': 2,
+      'Helm': 3,
+      'HelmAquatic': 4,
+      'Leggings': 5,
+      'Shoulders': 6
+    }
+  },
+  'Back': {typeId: 1},
+  'Bag': {typeId: 2},
+  'Consumable': {
+    typeId: 3, subTypes: {
+      'AppearanceChange': 0,
+      'Booze': 1,
+      'ContractNpc': 2,
+      'Food': 3,
+      'Generic': 4,
+      'Halloween': 5,
+      'Immediate': 6,
+      'Transmutation': 7,
+      'Unlock': 8,
+      'UpgradeRemoval': 9,
+      'Utility': 10,
+      'TeleportToFriend': 11    }
+  },
+  'Container': {
+    typeId: 4, subTypes: {
+      'Default': 0,
+      'GiftBox': 1,
+      'OpenUI': 2
+    }
+  },
+  'CraftingMaterial': {
+    typeId: 5
+  },
+  'Gathering': {
+    typeId: 6, subTypes: {
+      'Foraging': 0,
+      'Logging': 1,
+      'Mining': 2
+    }
+  },
+  'Gizmo': {
+    typeId: 7, subTypes: {
+      'Default': 0,
+      'ContainerKey': 1,
+      'RentableContractNpc': 2,
+      'UnlimitedConsumable': 3,
+    }
+  },
+  'MiniPet': {typeId: 8},
+  'Tool': {typeId: 9},
+  'Trait': {typeId: 10},
+  'Trinket': {
+    typeId: 11, subTypes: {
+      'Accessory': 0,
+      'Amulet': 1, 'Ring': 2
+    }
+  },
+  'Trophy': {typeId: 12},
+  'UpgradeComponent': {
+    typeId: 13, subTypes: {
+      'Default': 0,
+      'Gem': 1,
+      'Rune': 2,
+      'Sigil': 3
+    }
+  },
+  'Weapon': { typeId: 14, subTypes: {
+      'Axe': 0,
+      'Dagger': 1,
+      'Mace': 2,
+      'Pistol': 3,
+      'Scepter': 4,
+      'Sword': 5,
+      'Focus': 6,
+      'Shield': 7,
+      'Torch': 8,
+      'Warhorn': 9,
+      'Greatsword': 10,
+      'Hammer': 11,
+      'LongBow': 12,
+      'Rifle': 13,
+      'ShortBow': 14,
+      'Staff': 15,
+      'Harpoon': 16,
+      'Speargun': 17,
+      'Trident': 18,
+      'LargeBundle': 19,
+      'SmallBundle': 20,
+      'Toy': 21,
+      'TwoHandedToy': 22
+    }
+  }
+}
 
+var TypeLookupArray = [
+  {  name: 'Armor', subTypes: ['Boots', 'Coat', 'Gloves', 'Helm',
+    'HelmAquatic', 'Leggings', 'Shoulders']},
+  {name: 'Back'},
+  {name: 'Bag'},
+  {
+    name: 'Consumable', subTypes: ['AppearanceChange', 'Booze', 'ContractNpc', 'Food', 'Generic',
+    'Halloween', 'Immediate', 'Transmutation', 'Unlock', 'UpgradeRemoval', 'Utility', 'TeleportToFriend']
+  },
+  {name: 'Container', subTypes: ['Default', 'GiftBox', 'OpenUI']},
+  {name: 'CraftingMaterial'},
+  {name: 'Gathering', subTypes: ['Foraging', 'Logging', 'Mining']},
+  {name: 'Gizmo', subTypes: ['Default', 'ContainerKey', 'RentableContractNpc', 'UnlimitedConsumable']},
+  {name: 'MiniPet'},
+  {name: 'Tool'},
+  {name: 'Trait'},
+  {name: 'Trinket', subTypes: ['Accessory', 'Amulet', 'Ring']},
+  {name: 'Trophy'},
+  {name: 'UpgradeComponent', subTypes: ['Default', 'Gem', 'Rune', 'Sigil']},
+  {
+    name: 'Weapon', subTypes: ['Axe', 'Dagger', 'Mace', 'Pistol', 'Scepter', 'Sword', 'Focus', 'Shield',
+    'Torch', 'Warhorn', 'Greatsword', 'Hammer', 'LongBow', 'Rifle', 'ShortBow', 'Staff', 'Harpoon', 'Speargun',
+    'Trident', 'LargeBundle', 'SmallBundle', 'Toy', 'TwoHandedToy']
+  },
+]
+
+function getItemTypeIdAndSubtypeId(type, details){
+  var rv = {typeId: null, subTypeId: null};
+  rv.typeId = TypeLookupHash[type].typeId;
+  if(details != undefined && 'type' in details && 'subTypes' in TypeLookupHash[type]){
+    rv.subTypeId = TypeLookupHash[type].subTypes[details.type];
+  }
+  return rv;
+
+}
+
+function getItemTypeAndSubType(typeId, subTypeId){
+  var rv = {type: null, subType: null};
+  rv.type = TypeLookupArray[typeId].name;
+  if(subTypeId != null && 'subTypes' in TypeLookupHash[type]){
+    rv.subType = TypeLookupHash[typeId].subTypes[subTypeId];
+  }
+  return rv;
+}
+
+function convertTypeHash2Array(typeHash) {
+  // var returnArray = new Array(Object.keys(typeHash).length);
+  var returnArray = [];
+
+  for(var typeCounter = 0;  typeCounter < Object.keys(typeHash).length; typeCounter++){
+    var typeObject = typeHash[Object.keys(typeHash)[typeCounter]];
+
+    var subtypeArray = [];
+    if(typeObject.subTypes != undefined){
+      for(var subtypeCounter = 0; subtypeCounter < Object.keys(typeObject.subTypes).length; subtypeCounter++){
+        var subtypeName = Object.keys(typeObject.subTypes)[subtypeCounter];
+        var subtypeObj = {name: subtypeName, subtypeId: typeObject.subTypes[subtypeName] };
+        subtypeArray[subtypeObj.subtypeId] = subtypeObj;
+
+      }
+
+      typeObject.name = Object.keys(typeHash)[typeCounter];
+      typeObject.subTypes = subtypeArray;
+    }
+    returnArray[typeObject.typeId] = typeObject;
+  }
+  console.log(returnArray);
+  return returnArray;
 }

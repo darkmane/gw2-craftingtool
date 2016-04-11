@@ -58,16 +58,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <!-- For shared styles, shared-styles.html import in elements.html -->
   <style is="custom-style" include="shared-styles"></style>
 
-  <script>
-    function join(){return '';}
-  </script>
+  <script src="bower_components/jquery/dist/jquery.min.js"></script>
+
+
+
 </head>
 
 <body unresolved>
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
 
-    <paper-drawer-panel id="paperDrawerPanel" style="min-height: 100px">
+    <paper-drawer-panel id="paperDrawerPanel">
       <!-- Drawer Scroll Header Panel -->
       <paper-scroll-header-panel drawer fixed>
 
@@ -78,34 +79,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <!-- Drawer Content -->
         <paper-menu attr-for-selected="data-route" selected="[[route]]">
-          <a data-route="home" href="/">
+          <a data-route="home" href="{{baseUrl}}">
             <iron-icon icon="home"></iron-icon>
             <span>Home</span>
           </a>
-          <carbon-location use-hash-as-path route="{{route}}"></carbon-location>
-          <carbon-route route="{{route}}" pattern="/" active="{{homeActive}}"></carbon-route>
-          <carbon-route route="{{route}}" pattern="/types/:typeId" active="{{typeActive}}"
-                        data="{{typeData}}"></carbon-route>
-          <carbon-route route="{{route}}" pattern="/types/:typeId/subTypes/:subtypeId" active="{{subtypeActive}}"
-                        data="{{subtypeData}}"></carbon-route>
-          <iron-ajax url="scripts/itemtypebyid.json" last-response="{{itemTypeArray}}" auto></iron-ajax>
 
-          <iron-list items="[[itemTypeArray]]" as="type">
-            <template>
-              <div>
-                <paper-item data-route="types" style="pointer-events: none;" href$="/types/{{type.typeId}}">[[type.name]]</paper-item>
+          <a data-route="users" href="{{baseUrl}}users">
+            <iron-icon icon="info"></iron-icon>
+            <span>Users</span>
+          </a>
 
-              <iron-list items="[[type.subTypes]]" as="subtype">
-                <template>
-                  <div>
-                    <paper-item data-route="types" style="pointer-events: none;" href$="/types/{{type.typeId}}/subtypes/{{subtype.subtypeId}}">&nbsp;&nbsp;<span>[[subtype.name]]</span></paper-item>
-                  </div>
-                </template>
-              </iron-list>
-              </div>
-            </template>
-          </iron-list>
-
+          <a data-route="contact" href="{{baseUrl}}contact">
+            <iron-icon icon="mail"></iron-icon>
+            <span>Contact</span>
+          </a>
         </paper-menu>
       </paper-scroll-header-panel>
 
@@ -123,60 +110,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <!-- Application name -->
           <div class="middle middle-container">
-            <div class="app-name">Guildwars 2 Crafting Tool</div>
+            <div class="app-name">Polymer Starter Kit</div>
           </div>
 
           <!-- Application sub title -->
           <div class="bottom bottom-container">
-            <div class="bottom-title">Complete Recipe List</div>
+            <div class="bottom-title">The future of the web today</div>
           </div>
         </paper-toolbar>
 
         <!-- Main Content -->
-        <div class="content">
-          <!--<iron-pages attr-for-selected="data-route" selected="{{route}}">-->
-            <div hidden$="{{!homeActive}}">
-              <paper-material elevation="1">
-                <template is="dom-bind" id="gw2_items_list">
-                  <!--<iron-ajax url="scripts/itemlist.json" last-response="{{itemList}}" auto></iron-ajax>-->
-                  <!--<iron-localstorage name="gw2_item_list" value="[[itemList]]"></iron-localstorage>-->
-
-                  <iron-ajax url="scripts/itemtypebyname.json" last-response="{{itemTypeHash}}" auto></iron-ajax>
-                  <iron-localstorage name="gw2_item_type_hash" value="[[itemTypeHash]]"></iron-localstorage>
-
-                  <iron-ajax url="scripts/itemlist.json" handle-as="json" last-response="{{data}}" auto></iron-ajax>
-                  <iron-list items="[[data]]" as="item" style="min-height: 200px">
-                    <template>
-                      <div>
-                        [[item.name]]
-                      </div>
-                    </template>
-                  </iron-list>
-                </template>
-              </paper-material>
-
-            </div>
-
-            <div hidden$="{{!typeActive}}">
-              <paper-material elevation="1">
-                <h2 class="page-title">Users</h2>
-                <p>This is the users section</p>
-                <a href$="{{baseUrl}}users/Addy">Addy</a><br>
-                <a href$="{{baseUrl}}users/Rob">Rob</a><br>
-                <a href$="{{baseUrl}}users/Chuck">Chuck</a><br>
-                <a href$="{{baseUrl}}users/Sam">Sam</a>
-              </paper-material>
-            </div>
-
-            <div hidden$="{{!subtypeActive}}">
-              <paper-material elevation="1">
-                <h2 class="page-title">User: {{params.name}}</h2>
-                <div>This is {{params.name}}'s section</div>
-              </paper-material>
-            </div>
-
-          <!--</iron-pages>-->
-        </div>
+        <template is="dom-bind" id="gw2_items_list">
+          <iron-ajax url="scripts/itemlist.json" last-response="{{data}}" auto></iron-ajax>
+          <iron-list items="[[data]]" as="item">
+            <template>
+              <div>
+                Name: [[item.name]]
+              </div>
+            </template>
+          </iron-list>
+        </template>
       </paper-scroll-header-panel>
     </paper-drawer-panel>
 
@@ -207,6 +160,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <!-- build:js scripts/app.js -->
   <script src="scripts/app.js"></script>
   <!-- endbuild-->
+
 </body>
 
 </html>

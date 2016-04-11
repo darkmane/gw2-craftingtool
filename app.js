@@ -5,14 +5,12 @@ var cluster = require('cluster');
 var numCPUs = require('os').cpus().length;
 var hostname = require('os').hostname();
 var express = require('express');
-var routes = require('./routes');
 var path = require('path');
-var cfg = require(path.join(__dirname, 'configuration', "config"));
-var app = express();
+var cfg = require(path.join(__dirname, 'lib', "config"));
+var app = module.exports.app = exports.app = express();
 var env = (process.env.NODE_ENV || 'DEVELOPMENT').toLowerCase();
 var winston = require('winston');
 var npid = require('npid');
-
 
 //if (cluster.isMaster) {
 //  Logger.log("Master is forking workers");
@@ -21,6 +19,8 @@ var npid = require('npid');
 //  }
 //  return;
 //}
+
+app.use(require('connect-livereload')());
 
 // npid.create(path.join(__dirname, "pids", ("pid." + process.pid) ));
 npid.create(path.join(__dirname, "../shared/pids/node.pid"));
@@ -46,14 +46,15 @@ app.configure(function () {
     app.use(express.static(path.join(__dirname, 'public')));
 });
 
-app.configure('development', function () {
-    app.use(express.errorHandler());
+// global controller
+app.get('/*',function(req,res,next){
+  res.header('Access-Control-Allow-Origin' , 'http://api.guildwars2.com' );
+  next(); // http://expressjs.com/guide.html#passing-route control
 });
 
 //app.use(express.static(path.join(__dirname, '/public')));
 app.use(express.static('app'));
 
-// app.get('/', routes.index);
 app.get('/', function (req, response) {
     response.status(200).send(path.join(__dirname, 'app', 'index.html'));
 });
@@ -61,7 +62,6 @@ app.get('/', function (req, response) {
 
 subcategory_ids = [];
 
-app.get('/ping', routes.ping);
 
 app.listen(app.get('port'), function () {
     logger.log("Express".green.bold + " server listening on port " + (app.get('port') + "").green.bold);

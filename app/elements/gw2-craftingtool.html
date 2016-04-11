@@ -1,0 +1,296 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="gw2-craftingtool">
+  <template>
+    <div>
+      Guild wars 2
+      <div>
+        <template is="dom-repeat" items="{{ItemList}}">
+          <div><b>{{item.id}}</b><span>: </span><span>{{item.name}}</span></div>
+        </template>
+      </div>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'gw2-craftingtool',
+      properties: {
+        ItemList: {
+          type: Array,
+          computed: 'generateItemList()'
+        }
+      },
+      ready: function() {var il = new itemList();
+        il.update();
+        console.log("generated item list");
+        this.items =  il.item_list;
+      },
+      generateItemList: function() {
+        var il = new itemList();
+        il.update();
+        console.log("generated item list");
+        return new il.item_list;
+      }
+    });
+
+    var baseURI = "https://api.guildwars2.com";
+
+
+    function itemList() {
+      var storedVal = this.__retrieve()
+      if(storedVal == null) {
+        this.item_list = [];
+        this.update_deadline = new Date();
+      }else{
+        this.item_list = storedVal.item_list;
+        this.update_deadline = storedVal.update_deadline;
+      }
+
+
+    }
+
+    itemList.prototype.__isOutdated = function(){
+      return this.update_deadline <= (new Date());
+    }
+
+    itemList.prototype.update = function(){
+      if (this.__isOutdated()) {
+        console.log("itemList Update starting");
+        var item_hash = {}
+        for(var i = 0; i < this.item_list; i++){
+          item_hash[this.item_list[i].id] = this.item_list[i].name;
+        }
+        var request = new XMLHttpRequest();
+        request.open("GET", baseURI + "/v2/items");
+
+        request.onloadend = function (e) {
+          console.log("itemlist received")
+          newItemList = JSON.parse(e.target.response);
+          for (var i = newItemList.length; i--;) {
+            if (newItemList[i] in item_hash) {
+              newItemList.splice(i);
+            }
+          }
+          localStorage.gw2_new_item_list = newItemList;
+          var interval = window.setInterval(function() {
+            console.log("interval");
+            if(localStorage.gw2_new_item_list != null && localStorage.gw2_new_item_list.length > 0){
+              var updated_list = localStorage.gw2_new_item_list;
+              var sub_array = updated_list.slice(0, 99);
+              localStorage.gw2_new_item_list = updated_list;
+              request = new XMLHttpRequest();
+              console.log("Batch: " + sub_array.toString())
+              request.open("GET", baseURI + "/v2/items?ids=" + sub_array.toString());
+
+              request.onloadend = function (e) {
+                var items = JSON.parse(e.target.response);
+                while (items.length > 0) {
+                  var item = items.slice(0, 1);
+                  this.push('item_list', {name: item.name, id: item.id});
+                }
+              }
+
+              request.send(null);
+            }
+
+            if(localStorage.gw2.New_item_list.length ==0){
+              window.clearInterval(interval);
+            }
+
+
+          }, 1000);
+
+          while (newItemList.length > 0) {
+            var sub_array = newItemList.slice(0, 99);
+            request = new XMLHttpRequest();
+            console.log("Batch: " + sub_array.toString())
+            request.open("GET", baseURI + "/v2/items?ids=" + sub_array.toString());
+
+            request.onloadend = function (e) {
+              var items = e.loaded;
+              while (items.length > 0) {
+                var item = items.slice(0, 1);
+                this.push('item_list', {name: item.name, id: item.id});
+              }
+            }
+
+            request.send(null);
+
+          }
+          this.update_deadline = getFutureDate(7);
+
+        }
+
+        request.send();
+
+        this.__store();
+      }
+
+
+    }
+
+    itemList.prototype.__store = function(){
+      localStorage.setItem("gw2_item_list", JSON.stringify(this));
+    }
+
+    itemList.prototype.__retrieve = function(){
+      return JSON.parse(localStorage.getItem("gw2_item_list"));
+    }
+
+    function item(id) {
+      this.id = id;
+      var storedVal = this.__retrieve();
+      if(storedVal == null) {
+        this.name = "";
+        this.type = "";
+        this.level = 0;
+        this.rarity = "";
+        this.vendor_value = 0;
+        this.default_skin = 0;
+        this.game_types = [];
+        this.flags = [];
+        this.restrictions = [];
+        this.chat_link = "";
+        this.icon = "";
+        this.details = {};
+        this.__recipe_id = null;
+        this.update_deadline = new Date();
+
+      }else{
+        this.name = storedVal.name;
+        this.type = storedVal.type;
+        this.level = storedVal.level;
+        this.rarity = storedVal.rarity;
+        this.vendor_value = storedVal.vendor_value;
+        this.default_skin = storedVal.default_skin;
+        this.game_types = storedVal.game_types;
+        this.flags = storedVal.flags;
+        this.restrictions = storedVal.restrictions;
+        this.chat_link = storedVal.chat_link;
+        this.icon = storedVal.icon;
+        this.details = storedVal.details;
+        this.__recipe_id = storedVal.__recipe_id;
+        this.update_deadline = storedVal.update_deadline;
+      }
+      this.isOutdated = function () {
+        return this.update_deadline <= (new Date());
+      }
+    }
+
+    item.prototype.__retrieve = function(){
+      return localStorage.getItem("gw2_item_" + this.id);
+    }
+
+    item.prototype.__store = function(){
+      localStorage.setItem("gw2_item" + this.id, this);
+    }
+
+    item.prototype.update = function() {
+      if(this.isOutdated()) {
+        var request = new XMLHttpRequest();
+        request.open("GET", baseURI + "/v2/items?ids=" + this.id, false);
+        request.send(null);
+        if (request.status === 200) {
+          newItem = request.response;
+          this.name = newItem.name;
+          this.type = newItem.type;
+          this.level = newItem.level;
+          this.rarity = newItem.rarity;
+          this.vendor_value = newItem.vendor_value;
+          this.default_skin = newItem.default_skin;
+          this.game_types = newItem.game_types;
+          this.flags = newItem.flags;
+          this.restrictions = newItem.restrictions;
+          this.chat_link = newItem.chat_link;
+          this.icon = newItem.icon;
+          this.details = newItem.details;
+          this.update_deadline = getFutureDate(7);
+        }
+        this.__store();
+      }
+    }
+
+    item.prototype.GetRecipe = function() {
+      if(this.isOutdated() || this.__recipe_id == null) {
+        var request = new XMLHttpRequest();
+        request.open("GET", baseURI + "/v2/recipes/search?output=" + this.id, false);
+        request.send(null);
+        if (request.status === 200) {
+          var recipes = request.response;
+          if (recipes.length > 0) {
+            return new recipe(recipes[0]);
+          }
+        }
+      }else{
+        return new recipe(this.__recipe_id);
+      }
+      return null;
+    }
+
+    item.prototype.GetIngredients = function() {
+      var r = this.GetRecipe();
+      if(r == null)
+        return [];
+
+      var rv = [];
+      for(var i = 0; i < r.ingredients.length; i++){
+        var ingredient = r.ingredients[i];
+        var sub_item = new item(ingredient.item_id);
+        if(sub_item.GetIngredients() == []){
+          rv.push({count: ingredient.count, item: sub_item});
+        }else{
+          var sub_ingredients = sub_item.GetIngredients();
+          for(var j = 0; j< sub_ingredients.length; j++){
+            rv.push({count: ingredient.count * sub_ingredients[j].count, item: sub_ingredients[j].item})
+          }
+        }
+      }
+      return rv;
+    }
+
+
+    function recipe(id){
+      this.type = "";
+      this.output_item_id = 0;
+      this.output_item_count = 0;
+      this.min_rating = 0;
+      this.time_to_craft_ms = 0;
+      this.disciplines = [];
+      this.flags = [];
+      this.ingredients = [];
+      this.id = id;
+      this.chat_link = "";
+      this.update_deadline = new Date();
+      this.isOutdated = function(){
+        return this.update_deadline <= (new Date());
+      }
+    }
+
+    recipe.prototype.Update = function(){
+      var request = new XMLHttpRequest();
+      request.open("GET", baseURI + "/v2/recipes?ids=" + this.id, false);
+      request.send(null);
+      if(request.status === 200){
+        newRecipe = request.response;
+        this.type = newRecipe.type;
+        this.output_item_id  = newRecipe.output_item_id;
+        this.output_item_count = newRecipe.output_item_count;
+        this.min_rating = newRecipe.min_rating;
+        this.time_to_craft_ms = newRecipe.time_to_craft_ms;
+        this.disciplines = newRecipe.disciplines;
+        this.flags = newRecipe.flags;
+        this.ingredients = newRecipe.ingredients;
+        this.chat_link = newRecipe.chat_link;
+        this.update_deadline = getFutureDate(7);
+      }
+    }
+
+    function getFutureDate(days){
+      var  result = new Date();
+      result.setDate(result.getDate() + days);
+      return result;
+    }
+
+
+  </script>
+</dom-module>
