@@ -28,6 +28,7 @@ var gw2 = require('./app/scripts/gw2.js')
 var file = require('gulp-file');
 var http_request = require('request');
 var through2 = require('through2');
+var toArray = require('stream-to-array');
 
 // var ghPages = require('gulp-gh-pages');
 
@@ -105,7 +106,13 @@ var optimizeHtmlTask = function(src, dest) {
 gulp.task('generate-data', function () {
   var data = ''
   var output = [];
-  return http_request.get(baseURI + '/v2/items').on('error', function(err){
+  // var writer = fs.createWriteStream('app/scripts/itemlist.json');
+  // writer.write(JSON.stringify(output));
+  // var lookupByNameWriter = fs.createWriteStream('app/scripts/itemtypebyname.json');
+  // lookupByNameWriter.write(JSON.stringify(TypeLookupHash));
+  // var lookupByIdWriter = fs.createWriteStream('app/scripts/itemtypebyid.json');
+  // lookupByIdWriter.write(JSON.stringify(convertTypeHash2Array(TypeLookupHash)));
+  var returnStream =  http_request.get(baseURI + '/v2/items').on('error', function(err){
     console.log(err)
   }).pipe(through2.obj(function (chunk, enc, callback){
     data += chunk;
@@ -113,52 +120,74 @@ gulp.task('generate-data', function () {
   },
   function(callback){
     var item_list = JSON.parse(data);
-		var sub_array = item_list.splice(0, 99);
+		var item_id = item_list.pop();
 
 		do {
 
-			this.push(sub_array);
-			sub_array = item_list.splice(0, 99);
+			this.push(item_id);
+			item_id = item_list.pop();
 
 		}while(item_list.length > 0);
 
     callback();
-  })).pipe(through2.obj(
+	}
+  )).pipe(through2.obj(
     function(chunk, enc, callback){
+					http_request.get(baseURI + '/v2/recipes/search?output=' + chunk.toString(), function(error, response, body) {
+						if(error != undefined) {
+							console.log(error);
+							callback();
+							return;
+						}
+						var recipes = JSON.parse(body);
+						if(recipes.length > 0) {
+							var data = {id: chunk};
+            	data.recipe_list = recipes;
+              callback(null, data);
+						}else {
+							callback();
+						}
 
-			http_request.get(baseURI + '/v2/items?ids=' + chunk.toString(), function(error, response, body) {
+					});
+		}
+  )).pipe(through2.obj(
+    function(data, enc, callback){
+
+			http_request.get(baseURI + '/v2/items?ids=' + data.id, function(error, response, body) {
+				if(error != undefined) {
+					console.log("ERROR getting items");
+					console.log(error);
+					callback();
+					return;
+				}
 			  var items = JSON.parse(body);
-        for(var counter = 0; counter < items.length; counter ++ ){
+				var itemObj = [];
+        for(var counter = 0; counter < items.length; counter++){
           var item=items[counter];
-          if(counter == 0){
-            console.log(item.name)
-          }
-          var typeAndSubtype = getItemTypeIdAndSubtypeId(item.type, item.details);
-          output.push({id: item.id, name: item.name, type_id: typeAndSubtype.typeId,
-            subtype_id: typeAndSubtype.subTypeId});
-        }
-        callback();
+         	var typeAndSubtype = getItemTypeIdAndSubtypeId(item.type, item.details);
+					data.name = item.name;
+
+          data.type_id = typeAndSubtype.typeId;
+          data.subtype_id = typeAndSubtype.subTypeId;
+
+          console.log(data.name + " [" + dataj.id + "]");
+					callback(null, data);
+				}
 			});
 
-    }, function(callback){
-      output = output.sort(function(a, b){
-        if(a.name > b.name)
-          return 1;
-        if(a.name < b.name)
-          return -1;
-
-        return 0;
-      });
-      var writer = fs.createWriteStream('app/scripts/itemlist.json');
-      writer.write(JSON.stringify(output));
-      var lookupByNameWriter = fs.createWriteStream('app/scripts/itemtypebyname.json');
-      lookupByNameWriter.write(JSON.stringify(TypeLookupHash));
-      var lookupByIdWriter = fs.createWriteStream('app/scripts/itemtypebyid.json');
-      lookupByIdWriter.write(JSON.stringify(convertTypeHash2Array(TypeLookupHash)));
-
-      callback(null, output)
     }
   ));
+
+  console.log('Creating array');
+  toArray(returnStream, function (err, arr){
+    if(err == undefined){
+      var itemlist_writer =fs.createWriteStream('app/scripts/itemlist.json');
+      console.log('Writing File');
+      itemlist_writer.write(JSON.stringify(arr));
+
+    }
+  });
+  return returnStream;
 });
 
 // Compile and automatically prefix stylesheets
@@ -502,7 +531,9 @@ function getItemTypeIdAndSubtypeId(type, details){
   var rv = {typeId: null, subTypeId: null};
   rv.typeId = TypeLookupHash[type].typeId;
   if(details != undefined && 'type' in details && 'subTypes' in TypeLookupHash[type]){
+
     rv.subTypeId = TypeLookupHash[type].subTypes[details.type];
+
   }
   return rv;
 
@@ -523,7 +554,7 @@ function convertTypeHash2Array(typeHash) {
 
   for(var typeCounter = 0;  typeCounter < Object.keys(typeHash).length; typeCounter++){
     var typeObject = typeHash[Object.keys(typeHash)[typeCounter]];
-
+    var newTypeObject = {};
     var subtypeArray = [];
     if(typeObject.subTypes != undefined){
       for(var subtypeCounter = 0; subtypeCounter < Object.keys(typeObject.subTypes).length; subtypeCounter++){
@@ -532,12 +563,12 @@ function convertTypeHash2Array(typeHash) {
         subtypeArray[subtypeObj.subtypeId] = subtypeObj;
 
       }
-
-      typeObject.name = Object.keys(typeHash)[typeCounter];
-      typeObject.subTypes = subtypeArray;
+      newTypeObject.typeId = typeObject.typeId;
+      newTypeObject.name = Object.keys(typeHash)[typeCounter];
+      newTypeObject.subTypes = subtypeArray;
     }
-    returnArray[typeObject.typeId] = typeObject;
+    returnArray[typeObject.typeId] = newTypeObject;
   }
-  console.log(returnArray);
+  //console.log(returnArray);
   return returnArray;
 }

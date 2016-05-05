@@ -1,0 +1,47 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="gw2-recipe">
+  <template>
+    <div>
+      <template is="dom-repeat" items="{{recipe}}">
+        <div><b>{{item.id}}</b><span>: </span><span>{{item.name}}</span></div>
+      </template>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'gw2-recipe',
+      properties: {
+        recipe: {
+          type: Object,
+          computed: 'load()'
+	},
+	     id: {
+					type: Number,
+					reflectToAttribute: true
+			 }
+      },
+			load: loadRecipe
+    });
+
+    var baseURI = "https://api.guildwars2.com";
+
+		function loadRecipe() {
+			var stored_recipe = localStorage.getItem("gw2_recipe_" + this.id);
+			var recipe = null;
+			if(stored_recipe == undefined || stored_recipe == '') {
+        var request = new XMLHttpRequest();
+	     	request.open("GET", baseURI + "/v2/recipes/" + this.id);
+	      request.onloadend = function(e) {
+	  	    	new_recipe = JSON.parse(e.target.response);
+				    this.recipe = new_recipe;
+						localStorage.setItem("gw2_recipe_" + this.id, new_recipe);
+		   	}
+  
+			}else {
+        this.recipe = JSON.parse(stored_recipe);
+			}
+		}
+
+  </script>
+</dom-module>
