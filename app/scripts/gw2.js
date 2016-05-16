@@ -3,67 +3,37 @@
  */
 
 var baseURI = "http://api.guildwars2.com";
+var ITEM_PREFIX = "gw2_item_";
 
+function getJSON (url) {
+  // Return a new promise.
+  return new Promise(function(resolve, reject) {
+    // Do the usual XHR stuff
+    var req = new XMLHttpRequest();
+    req.open('GET', url);
 
-function itemList() {
-  var storedVal = this.__retrieve()
-  if(storedVal == null) {
-    this.item_list = {};
-    this.update_deadline = new Date();
-  }else{
-    this.item_list = storedVal.item_list;
-    this.update_deadline = storedVal.update_deadline;
-  }
-
-
-}
-
-itemList.prototype.__isOutdated = function(){
-  return this.update_deadline <= (new Date());
-}
-
-itemList.prototype.update = function(){
-  if(this.__isOutdated()) {
-    var request = new XMLHttpRequest();
-    request.open("GET", baseURI + "/v2/items", false);
-    request.send(null);
-    if (request.status === 200) {
-      newItemList = request.response;
-      for (var i = newItemList.length; i--;) {
-        if (newItemList[i] in this.item_list) {
-          newItemList.splice(i);
-        }
+    req.onload = function() {
+      // This is called even on 404 etc
+      // so check the status
+      if (req.status == 200) {
+        // Resolve the promise with the response text
+        resolve(req.response);
       }
-
-      while (newItemList.length > 0) {
-        var sub_array = newItemList.slice(0, 9);
-        request = new XMLHttpRequest();
-        request.open("GET", baseURI + "/v2/items?ids=" + sub_array.toString(), false);
-        request.send(null);
-
-        if (request.status === 200) {
-          var items = request.response;
-          while (items.length > 0) {
-            var item = items.slice(0, 1);
-            this.item_list[item.id] = item.name;
-          }
-        }
+      else {
+        // Otherwise reject with the status text
+        // which will hopefully be a meaningful error
+        reject(Error(req.statusText));
       }
-      this.update_deadline = getFutureDate(7);
+    };
 
-    }
-  }
+    // Handle network errors
+    req.onerror = function() {
+      reject(Error("Network Error"));
+    };
 
-  this.__store();
-
-}
-
-itemList.prototype.__store = function(){
-  localStorage.setItem("gw2_item_list", this);
-}
-
-itemList.prototype.__retrieve = function(){
-  return localStorage.getItem("gw2_item_list");
+    // Make the request
+    req.send();
+  }).then(JSON.parse);
 }
 
 function item(id) {
@@ -82,7 +52,7 @@ function item(id) {
     this.chat_link = "";
     this.icon = "";
     this.details = {};
-    this.__recipe_id = null;
+    this.__recipe = [];
     this.update_deadline = new Date();
 
   }else{
@@ -98,8 +68,9 @@ function item(id) {
     this.chat_link = storedVal.chat_link;
     this.icon = storedVal.icon;
     this.details = storedVal.details;
-    this.__recipe_id = storedVal.__recipe_id;
+    this.__recipe = storedVal.__recipe;
     this.update_deadline = storedVal.update_deadline;
+
   }
   this.isOutdated = function () {
     return this.update_deadline <= (new Date());
@@ -107,20 +78,20 @@ function item(id) {
 }
 
 item.prototype.__retrieve = function(){
-  return localStorage.getItem("gw2_item_" + this.id);
+  return localStorage.getItem(ITEM_PREFIX + this.id);
 }
 
 item.prototype.__store = function(){
-  localStorage.setItem("gw2_item" + this.id, this);
+  this.update_deadline = getFutureDate(7);
+  localStorage.setItem(ITEM_PREFIX + this.id, this);
 }
 
 item.prototype.update = function() {
   if(this.isOutdated()) {
-    var request = new XMLHttpRequest();
-    request.open("GET", baseURI + "/v2/items?ids=" + this.id, false);
-    request.send(null);
-    if (request.status === 200) {
-      newItem = request.response;
+    var newItem = getJSON(baseURI + '/v2/items/' + this.id).catch(function(error){
+      console.log(error.message);
+    });
+    if(newItem != null){
       this.name = newItem.name;
       this.type = newItem.type;
       this.level = newItem.level;
@@ -133,85 +104,53 @@ item.prototype.update = function() {
       this.chat_link = newItem.chat_link;
       this.icon = newItem.icon;
       this.details = newItem.details;
-      this.update_deadline = getFutureDate(7);
+      this.__store();
     }
-    this.__store();
   }
 }
 
 item.prototype.GetRecipe = function() {
-  if(this.isOutdated() || this.__recipe_id == null) {
-    var request = new XMLHttpRequest();
-    request.open("GET", baseURI + "/v2/recipes/search?output=" + this.id, false);
-    request.send(null);
-    if (request.status === 200) {
-      var recipes = request.response;
-      if (recipes.length > 0) {
-        return new recipe(recipes[0]);
-      }
-    }
-  }else{
-    return new recipe(this.__recipe_id);
-  }
-  return null;
+  if(this.isOutdated()) {
+    var recipe = getJSON(baseURI + "/v2/recipes/search?output=" + this.id, false)
+      .then(function(recipes){
+        return getJSON(baseURI + "/v2/recipes/" + recipes[0])
+      }).then(function(recipe){
+        var r = [];
+        for(var counter = 0; counter < recipe.ingredients.length; counter++){
+          var ingredient_id = recipe.ingredients[counter].id;
+          var ingredient_count = recipe.ingredients[counter].count;
+          var ingredient = new item(ingredient_id);
+          ingredient.update();
+          ingredient.GetRecipe();
+          recipe.push({id: ingredient_id, item: ingredient, count: ingredient_count});
+        }
+        return r;
+      }).catch(function(error){
+        console.log(error.message)
+      });
+
+    this.__recipe = recipe;
+		this.__store();
+
+  } else {
+		this.__retrieve();
+	}
+
+  return this.__recipe;
 }
 
 item.prototype.GetIngredients = function() {
   var r = this.GetRecipe();
-  if(r == null)
-    return [];
+  var ingredients = [];
 
-  var rv = [];
-  for(var i = 0; i < r.ingredients.length; i++){
-    var ingredient = r.ingredients[i];
-    var sub_item = new item(ingredient.item_id);
-    if(sub_item.GetIngredients() == []){
-      rv.push({count: ingredient.count, item: sub_item});
-    }else{
-      var sub_ingredients = sub_item.GetIngredients();
-      for(var j = 0; j< sub_ingredients.length; j++){
-        rv.push({count: ingredient.count * sub_ingredients[j].count, item: sub_ingredients[j].item})
-      }
+  for(var counter = 0; counter < r.length; counter++){
+    if(r[counter].GetIngredients().length == 0){
+      ingredients.push(r[counter]);
+    } else{
+
     }
   }
   return rv;
-}
-
-
-function recipe(id){
-  this.type = "";
-  this.output_item_id = 0;
-  this.output_item_count = 0;
-  this.min_rating = 0;
-  this.time_to_craft_ms = 0;
-  this.disciplines = [];
-  this.flags = [];
-  this.ingredients = [];
-  this.id = id;
-  this.chat_link = "";
-  this.update_deadline = new Date();
-  this.isOutdated = function(){
-    return this.update_deadline <= (new Date());
-  }
-}
-
-recipe.prototype.Update = function(){
-  var request = new XMLHttpRequest();
-  request.open("GET", baseURI + "/v2/recipes?ids=" + this.id, false);
-  request.send(null);
-  if(request.status === 200){
-    newRecipe = request.response;
-    this.type = newRecipe.type;
-    this.output_item_id  = newRecipe.output_item_id;
-    this.output_item_count = newRecipe.output_item_count;
-    this.min_rating = newRecipe.min_rating;
-    this.time_to_craft_ms = newRecipe.time_to_craft_ms;
-    this.disciplines = newRecipe.disciplines;
-    this.flags = newRecipe.flags;
-    this.ingredients = newRecipe.ingredients;
-    this.chat_link = newRecipe.chat_link;
-    this.update_deadline = getFutureDate(7);
-  }
 }
 
 function getFutureDate(days){

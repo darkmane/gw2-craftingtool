@@ -16,7 +16,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="Polymer Starter Kit">
-  <title>Polymer Starter Kit</title>
+  <title>Guild Wars 2 Crafting Tool</title>
 
   <!-- Place favicon.ico in the `app/` directory -->
 
@@ -61,12 +61,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
 					function join(){return '';}
 
-					function _toggle(item_id) {
-				     var moreInfo = document.getElementById('item_' + item_id);
-				     var iconButton = Polymer.dom(event).localTarget;
-				     iconButton.icon = moreInfo.opened ? 'hardware:keyboard-arrow-up':'hardware:keyboard-arrow-down';
-					   moreInfo.toggle();
-				  }
   </script>
 </head>
 
@@ -155,46 +149,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                   <iron-ajax url="scripts/itemlist.json" handle-as="json" last-response="{{data}}" auto></iron-ajax>
                   <iron-list items="[[data]]" as="item" style="min-height: 200px">
                     <template>
-                      <div>
-															[[item.name]]
-                        <paper-icon-button icon="hardware:keyboard-arrow-down" title="more info" onclick="_toggle([[item.id]])" style="float:right;">
-															    </paper-icon-button>
-												<!-- Request Recipe for Item -->
-												<iron-collapse id="item_[[item.id]]">
-                        <iron-list items="item.recipe_list" as="recipe">
-												<template>
-                            <gw2-recipe recipe_id="[[recipe]]">
-
-														</gw2-recipe>
-                          </template>
-													</iron-list>
-													</iron-collapse>
-                        <!-- Request List of ingredients from -->
-                      </div>
+										<gw2-recipe id="{{item.id}}" name="{{item.name}}" recipe_id="{{item.recipe_list}}"></gw2-recipe>
                     </template>
                   </iron-list>
                 </template>
               </paper-material>
 
             </div>
-
-            <!--<div hidden$="{{!typeActive}}">-->
-              <!--<paper-material elevation="1">-->
-                <!--<h2 class="page-title">Users</h2>-->
-                <!--<p>This is the users section</p>-->
-                <!--<a href$="{{baseUrl}}users/Addy">Addy</a><br>-->
-                <!--<a href$="{{baseUrl}}users/Rob">Rob</a><br>-->
-                <!--<a href$="{{baseUrl}}users/Chuck">Chuck</a><br>-->
-                <!--<a href$="{{baseUrl}}users/Sam">Sam</a>-->
-              <!--</paper-material>-->
-            <!--</div>-->
-
-            <!--<div hidden$="{{!subtypeActive}}">-->
-              <!--<paper-material elevation="1">-->
-                <!--<h2 class="page-title">User: {{params.name}}</h2>-->
-                <!--<div>This is {{params.name}}'s section</div>-->
-              <!--</paper-material>-->
-            <!--</div>-->
 
           <!--</iron-pages>-->
         </div>

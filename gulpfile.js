@@ -170,7 +170,7 @@ gulp.task('generate-data', function () {
           data.type_id = typeAndSubtype.typeId;
           data.subtype_id = typeAndSubtype.subTypeId;
 
-          console.log(data.name + " [" + dataj.id + "]");
+          console.log(data.name + " [" + data.id + "]");
 					callback(null, data);
 				}
 			});
