@@ -1,0 +1,61 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<script src="../scripts/gw2.js"></script>
+
+<dom-module id="gw2-item">
+  <template>
+    <div>
+      <iron-localstorage name="{{item_key}}" value="{{item}}" on-iron-localstorage-load-empty="empty_item"></iron-localstorage>
+      <iron-ajax id="item_request" url="{{item_url}}" handle-as="json" lastResponse="{{item}}"></iron-ajax>
+      <img src="{{item.icon}}"> {{item.name::change}}
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'gw2-item',
+      properties: {
+        item_id: {
+          type: Number,
+          reflectToAttribute: true
+        },
+        item_key: {
+          type: String,
+          computed: 'get_item_key(item_id)'
+        },
+        item_url:{
+          type: String,
+          computed: 'get_item_url(item_id)'
+        },
+        item: Object
+      },
+      ready: function(){
+        var i = localStorage.getItem('gw2_item_' + this.item_id);
+        this.item = i;
+      },
+      get_item_key: function(item_id){
+        return 'gw2_item_' + item_id;
+      },
+      get_item_url: function(item_id){
+        return BASE_URI + '/v2/items/' + item_id;
+      },
+      empty_item: function(){
+
+        var setter = this.set;
+
+        getJSON(BASE_URI + '/v2/items/' + this.item_id).then(
+          function(item){
+            this.item = item;
+          }.bind(this),function(err){
+            console.log(err);
+          }
+        )
+      }
+
+    });
+
+
+
+
+  </script>
+</dom-module>

@@ -2,7 +2,7 @@
  * Created by darkmane on 3/18/16.
  */
 
-var baseURI = "http://api.guildwars2.com";
+var BASE_URI = "https://api.guildwars2.com";
 var ITEM_PREFIX = "gw2_item_";
 
 function getJSON (url) {
@@ -36,9 +36,10 @@ function getJSON (url) {
   }).then(JSON.parse);
 }
 
-function item(id) {
+var item = function(id) {
   this.id = id;
-  var storedVal = this.__retrieve();
+
+  var storedVal = __retrieve(id);
   if(storedVal == null) {
     this.name = "";
     this.type = "";
@@ -75,20 +76,52 @@ function item(id) {
   this.isOutdated = function () {
     return this.update_deadline <= (new Date());
   }
+
+  return this;
 }
 
-item.prototype.__retrieve = function(){
-  return localStorage.getItem(ITEM_PREFIX + this.id);
+item.prototype.__retrieve= function(){
+  return __retrieve(this.id);
 }
 
 item.prototype.__store = function(){
-  this.update_deadline = getFutureDate(7);
-  localStorage.setItem(ITEM_PREFIX + this.id, this);
+  __store(this);
+}
+
+
+
+function __retrieve(id){
+  return localStorage.getItem(ITEM_PREFIX + id);
+}
+
+function __store(item){
+  item.update_deadline = getFutureDate(7);
+  localStorage.setItem(ITEM_PREFIX + item.id, item);
 }
 
 item.prototype.update = function() {
   if(this.isOutdated()) {
-    var newItem = getJSON(baseURI + '/v2/items/' + this.id).catch(function(error){
+    var oldItem = this;
+    var newItem = getJSON(BASE_URI + '/v2/items/' + this.id).done(function (newItem) {
+      console.log("WHOO HOO!");
+      if(newItem != null){
+        oldItem.name = newItem.name;
+        oldItem.type = newItem.type;
+        oldItem.level = newItem.level;
+        oldItem.rarity = newItem.rarity;
+        oldItem.vendor_value = newItem.vendor_value;
+        oldItem.default_skin = newItem.default_skin;
+        oldItem.game_types = newItem.game_types;
+        oldItem.flags = newItem.flags;
+        oldItem.restrictions = newItem.restrictions;
+        oldItem.chat_link = newItem.chat_link;
+        oldItem.icon = newItem.icon;
+        oldItem.details = newItem.details;
+        oldItem.__store();
+        return this;
+      }
+      return newItem;
+    }, function (error) {
       console.log(error.message);
     });
     if(newItem != null){
@@ -105,15 +138,16 @@ item.prototype.update = function() {
       this.icon = newItem.icon;
       this.details = newItem.details;
       this.__store();
+      return this;
     }
   }
 }
 
 item.prototype.GetRecipe = function() {
   if(this.isOutdated()) {
-    var recipe = getJSON(baseURI + "/v2/recipes/search?output=" + this.id, false)
+    var recipe = getJSON(BASE_URI + "/v2/recipes/search?output=" + this.id, false)
       .then(function(recipes){
-        return getJSON(baseURI + "/v2/recipes/" + recipes[0])
+        return getJSON(BASE_URI + "/v2/recipes/" + recipes[0])
       }).then(function(recipe){
         var r = [];
         for(var counter = 0; counter < recipe.ingredients.length; counter++){
@@ -141,12 +175,25 @@ item.prototype.GetRecipe = function() {
 
 item.prototype.GetIngredients = function() {
   var r = this.GetRecipe();
-  var ingredients = [];
+  var ingredients = {};
 
   for(var counter = 0; counter < r.length; counter++){
     if(r[counter].GetIngredients().length == 0){
-      ingredients.push(r[counter]);
+      if (!(r[counter].id in ingredients)){
+        ingredients[r[counter].id] = r[counter];
+      }else{
+        ingredients[r[counter].id].count += r[counter].count;
+      }
     } else{
+      var list = r[counter].GetIngredients()
+      for(var counter2 = 0; counter2 < list.length;counter2++){
+        if (!(list[counter2].id in ingredients)){
+          ingredients[list[counter2].id] = list[counter2];
+        }else{
+          ingredients[list[counter2].id].count += list[counter2].count;
+        }
+      }
+
 
     }
   }

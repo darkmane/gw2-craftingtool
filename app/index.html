@@ -57,9 +57,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <!-- For shared styles, shared-styles.html import in elements.html -->
   <style is="custom-style" include="shared-styles"></style>
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+  <script src="scripts/gw2.js"></script>
 
   <script>
-					function join(){return '';}
+
+    $(document).ready(function(){
+//      $('#item_list').on('response', function(e){
+//        console.log(JSON.stringify(e));
+//      });
+
+      getJSON('scripts/itemlist.json').then(function (items) {
+        for(var counter = 0; counter < items.length; counter++){
+          var item = items[counter];
+          //localStorage.setItem('gw2_item_' + item.id, JSON.stringify(item));
+        }
+      }, function (err) {
+        console.log(err);
+      });
+    });
 
   </script>
 </head>
@@ -139,20 +155,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <!--<div hidden$="{{!homeActive}}">-->
             <div>
               <paper-material elevation="1">
-                <template is="dom-bind" id="gw2_items_list">
-                  <!--<iron-ajax url="scripts/itemlist.json" last-response="{{itemList}}" auto></iron-ajax>-->
-                  <!--<iron-localstorage name="gw2_item_list" value="[[itemList]]"></iron-localstorage>-->
-
-                  <iron-ajax url="scripts/itemtypebyname.json" last-response="{{itemTypeHash}}" auto></iron-ajax>
-                  <iron-localstorage name="gw2_item_type_hash" value="[[itemTypeHash]]"></iron-localstorage>
-
-                  <iron-ajax url="scripts/itemlist.json" handle-as="json" last-response="{{data}}" auto></iron-ajax>
-                  <iron-list items="[[data]]" as="item" style="min-height: 200px">
-                    <template>
-										<gw2-recipe id="{{item.id}}" name="{{item.name}}" recipe_id="{{item.recipe_list}}"></gw2-recipe>
-                    </template>
-                  </iron-list>
-                </template>
+                <gw2-craftingtool></gw2-craftingtool>
               </paper-material>
 
             </div>

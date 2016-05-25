@@ -1,19 +1,20 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="gw2-item.html">
+<script src="../scripts/gw2.js"></script>
 
 <dom-module id="gw2-recipe">
   <template>
     <div>
-      [[name]]
+      <gw2-item item_id="{{item_id}}"></gw2-item>
       <paper-icon-button id="drawer_button" icon="hardware:keyboard-arrow-down" title="more info"
                          style="float:right;"></paper-icon-button>
+      <iron-request id="xhr"></iron-request>
       <!-- Request Recipe for Item -->
-      <iron-collapse id="recipe_info">
+			<iron-collapse id="recipe_info">
         <div class="collapse_content">
-          <ul>
-            <li>Id: {{recipe_id}}</li>
-            <li>Skills: <span>{{recipe.disciplines}}</span></li>
-            <li>Rating: <span>{{recipe.min_rating}}</span></li>
-          </ul>
+          <template is="dom-repeat" items="{{ingredient_in}}">
+            <div>{{item}}</div>
+          </template>
         </div>
       </iron-collapse>
       <!-- Request List of ingredients from -->
@@ -23,115 +24,41 @@
     Polymer({
       is: 'gw2-recipe',
       properties: {
-        name: String,
-        id: Number,
-        recipe_id: Number,
+        item_id: {
+          type: Number,
+          reflectToAttribute: true
+        },
         recipe: {
           type: Object,
-          notify: true,
-          value: function(){
-            return localStorage.getItem("gw2_recipe_" + this.id);
-          }
+          notify: true
+
+        },
+        ingredient_in: {
+          type:Array,
+          readOnly: true
         }
       },
 
       listeners: {
         'drawer_button.tap': 'toggle'
       },
-      load: function (item_id, recipe_id) {
-        //var item_id = this.id;
-        var stored_recipe = localStorage.getItem("gw2_recipe_" + item_id);
-				var recipe = null;
-
-        if (stored_recipe == undefined || stored_recipe == '') {
-          var request = new XMLHttpRequest();
-          request.open("GET", baseURI + "/v2/recipes/" + this.recipe_id, false);
-          request.send(null);
-          new_recipe = JSON.parse(request.responseText);
-          console.log(request.responseText);
-					this.recipe = new_recipe;
-					localStorage.setItem("gw2_recipe_" + item_id, new_recipe);
-
-        } else {
-          this.recipe = stored_recipe;
-        }
-      },
-      loadRecipe: function(recipe_id){
-        var recipe = this.getJSON(baseURI + "/v2/recipes/" + recipe_id).then(function(recipe){
-          var ingredients = {};
-          for(var counter = 0; counter < recipe.ingredients.length; counter++){
-            var r = this.loadRecipe(recipe.ingredients[counter].item_id);
-            if(r.length() > 0){
-              for(var  counter2 = 0;counter < r.length;counter++){
-                r
-              }
-            }else{
-
-            }
-
-
-            ingredients.push(r);
-          }
-        });
-
-        return recipe;
-      },
-      loadItem: function(item_id) {
-        var item = localStorage.getItem('item_' + item_id);
-        if(item != null){
-          return item;
-        }
-
-        item = this.getJSON(baseURI + "/v2/items/" + item_id).then(function(item){
-          item.ingredients = this.loadRecipe(item.id);
-          return item;
-        });
-
-        return item;
-      },
-      getJSON: function (url) {
-        // Return a new promise.
-        return new Promise(function(resolve, reject) {
-          // Do the usual XHR stuff
-          var req = new XMLHttpRequest();
-          req.open('GET', url);
-
-          req.onload = function() {
-            // This is called even on 404 etc
-            // so check the status
-            if (req.status == 200) {
-              // Resolve the promise with the response text
-              resolve(req.response);
-            }
-            else {
-              // Otherwise reject with the status text
-              // which will hopefully be a meaningful error
-              reject(Error(req.statusText));
-            }
-          };
-
-          // Handle network errors
-          req.onerror = function() {
-            reject(Error("Network Error"));
-          };
-
-          // Make the request
-          req.send();
-        }).then(JSON.parse);
-      },
       toggle: function (event) {
-        this.load(this.id, this.recipe_id);
+
         console.log('Hit toggle');
         var moreInfo = this.$.recipe_info;
         var iconButton = Polymer.dom(event).localTarget;
         iconButton.icon = moreInfo.opened ? 'hardware:keyboard-arrow-down' : 'hardware:keyboard-arrow-up';
         moreInfo.toggle();
+      },
+      get_recipe: function(){
+        return getJSON(BASE_URI + "/v2/recipes/search?output=" + this.item_id).then(function(recipe_id){
+          return getJSON(BASE_URI + "/v2/recipes/" + recipe_id);
+        }).then(function(recipe){
+          this.recipe = recipe;
+        }.bind(this));
       }
 
-    })
-    ;
-
-    var baseURI = "https://api.guildwars2.com";
+    });
 
 
   </script>
