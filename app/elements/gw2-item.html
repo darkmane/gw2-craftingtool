@@ -1,14 +1,33 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
-<script src="../scripts/gw2.js"></script>
 
+<script src="../scripts/gw2.js"></script>
+<style>
+				.root {
+					min-height: 84px;
+	}
+
+	.image {
+					float: left;
+					height: 100%;
+	}
+
+	.content::first-line {
+		font-weight: bold;
+	}
+</style>
 <dom-module id="gw2-item">
   <template>
-    <div>
-      <iron-localstorage name="{{item_key}}" value="{{item}}" on-iron-localstorage-load-empty="empty_item"></iron-localstorage>
-      <iron-ajax id="item_request" url="{{item_url}}" handle-as="json" lastResponse="{{item}}"></iron-ajax>
-      <img src="{{item.icon}}"> {{item.name::change}}
+	<div class="root">
+		<div class="image">
+      <img src="{{item.icon}}">
+
+		</div>
+		<div class="content">
+			{{count}} {{item.name}}<br>
+      {{item.description}}
+		</div>
+    <iron-ajax  url="{{item_url}}"last-response="{{item}}" auto></iron-ajax>
     </div>
   </template>
   <script>
@@ -19,43 +38,22 @@
           type: Number,
           reflectToAttribute: true
         },
-        item_key: {
-          type: String,
-          computed: 'get_item_key(item_id)'
+        count: {
+          type: Number,
+          reflectToAttribute: true
         },
-        item_url:{
+        item_url: {
           type: String,
-          computed: 'get_item_url(item_id)'
-        },
-        item: Object
+          computed: 'getItemUrl(item_id)',
+          readOnly: true,
+          notify: true
+        }
       },
-      ready: function(){
-        var i = localStorage.getItem('gw2_item_' + this.item_id);
-        this.item = i;
-      },
-      get_item_key: function(item_id){
-        return 'gw2_item_' + item_id;
-      },
-      get_item_url: function(item_id){
-        return BASE_URI + '/v2/items/' + item_id;
-      },
-      empty_item: function(){
-
-        var setter = this.set;
-
-        getJSON(BASE_URI + '/v2/items/' + this.item_id).then(
-          function(item){
-            this.item = item;
-          }.bind(this),function(err){
-            console.log(err);
-          }
-        )
+      getItemUrl: function(item_id) {
+        return `${GW2_API}/v2/items/${item_id}`
       }
 
     });
-
-
-
 
   </script>
 </dom-module>

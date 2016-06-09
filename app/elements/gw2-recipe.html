@@ -1,23 +1,95 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="gw2-item.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
 <script src="../scripts/gw2.js"></script>
+<style>
+  paper-card.recipe-header {
+    @apply(--layout-horizontal);
+  }
 
+  .card-content {
+    @apply(--layout-flex);
+  }
+
+  .item-panel {
+    width: 100%;
+  }
+
+  paper-card {
+    width: 100%;
+  }
+
+  .rate-image {
+    width: 64px;
+    height: 64px;
+    background-size: cover;
+  }
+
+  .item {
+    height: 64px;
+  }
+
+  .item img {
+    float: left;
+    overflow: auto;
+  }
+</style>
 <dom-module id="gw2-recipe">
   <template>
-    <div>
-      <gw2-item item_id="{{item_id}}"></gw2-item>
-      <paper-icon-button id="drawer_button" icon="hardware:keyboard-arrow-down" title="more info"
-                         style="float:right;"></paper-icon-button>
-      <iron-request id="xhr"></iron-request>
-      <!-- Request Recipe for Item -->
-			<iron-collapse id="recipe_info">
-        <div class="collapse_content">
-          <template is="dom-repeat" items="{{ingredient_in}}">
-            <div>{{item}}</div>
-          </template>
+
+    <div class="item-panel">
+      <!--<iron-ajax id="recipe_item" auto url="{{get_item_url}}" handle-as="json" verbose last-response="{{item}}" last-error="{{error}}"></iron-ajax>-->
+      <iron-ajax url="{{item_url}}" last-response="{{item}}" auto ></iron-ajax>
+      <paper-card class="recipe-header">
+        <div class="item-panel">
+          <div class="card-content">
+            <div class="item"><img src="{{item.icon}}">
+              {{item.name}}
+            </div>
+            <iron-collapse id="recipe_info">
+              <iron-pages selected="{{list_selection}}">
+
+                <div>Ingredients:
+                  <template is="dom-repeat" items="{{ingredients}}">
+                    <div>
+                      <gw2-item count="{{item.count}}" item_id="{{item.item_id}}"></gw2-item>
+                    </div>
+                  </template>
+                </div>
+                <div>Used to create:
+                  <template is="dom-repeat" items="{{ingredient_in}}">
+                    <div>
+                      <gw2-item item_id="{{item}}"></gw2-item>
+                    </div>
+                  </template>
+                </div>
+                <div>Full Ingredient List:
+                  <template is="dom-repeat" items="{{full_ingredients}}">
+                    <div>
+                      <gw2-item count="{{item.count}}" item_id="{{item.item_id}}"></gw2-item>
+                    </div>
+                  </template>
+                </div>
+
+              </iron-pages>
+            </iron-collapse>
+          </div>
+          <div class="card-actions">
+            <paper-tabs selected="{{list_selection}}">
+              <paper-tab>Ingredients</paper-tab>
+              <paper-tab>Ingredient In</paper-tab>
+              <paper-tab>Full Ingredients</paper-tab>
+              <paper-icon-button id="drawer_button" icon="hardware:keyboard-arrow-down" title="more info"
+                                 style="float:right;"></paper-icon-button>
+            </paper-tabs>
+          </div>
         </div>
-      </iron-collapse>
-      <!-- Request List of ingredients from -->
+      </paper-card>
     </div>
   </template>
   <script>
@@ -28,35 +100,162 @@
           type: Number,
           reflectToAttribute: true
         },
+        item: {
+          type: Object
+        },
         recipe: {
           type: Object,
           notify: true
 
         },
         ingredient_in: {
-          type:Array,
-          readOnly: true
+          type: Array,
+          value: function () {
+            return []
+          },
+          notify: true
+        },
+        ingredients: {
+          type: Array,
+          value: function () {
+            return []
+          },
+          notify: true
+        },
+        full_ingredients: {
+          type: Array,
+          value: function () {
+            return []
+          },
+          notify: true
+        },
+        list_selection: {
+          type: Number,
+          value: 0
+        },
+        item_url: {
+          type: String,
+          computed: 'getItemUrl(item_id)',
+          readOnly: true,
+          notify: true
         }
       },
+      // behaviors: [Polymer.IronResizableBehavior],
 
       listeners: {
         'drawer_button.tap': 'toggle'
       },
       toggle: function (event) {
 
-        console.log('Hit toggle');
+
+        this.get_recipes_item_used_in(this.item_id).then(function (recipes) {
+          this.splice('ingredient_in', 0, this.ingredient_in.length);
+          recipes.forEach(recipe => this.push('ingredient_in', recipe.output_item_id));
+
+        }.bind(this), function (reason) {
+          console.log("WARN: " + JSON.stringify(reason));
+        });
+
+
+
+        this.get_item_recipe(this.item_id).then(function (recipe) {
+          this.splice('ingredients', 0, this.ingredients.length);
+          recipe.ingredients.forEach(ingredient => this.push('ingredients', ingredient));
+
+        }.bind(this), function (reason) {
+          console.log("WARN: " + JSON.stringify(reason));
+        });
+
+
+
+        this.get_full_recipe(1, this.item_id).then(function (ingredients) {
+          var ingredient_hash = {};
+
+          var add_to = function (hash, item) {
+            if (item.item_id in hash) {
+              var needed = hash[item.item_id].count;
+              hash[item.item_id] = {item_id: item.item_id, count: item.count + needed};
+            } else {
+              hash[item.item_id] = item;
+            }
+            return hash;
+          }
+          var ingredient_list = [];
+          var flatten = function (list) {
+            if (!Array.isArray(list)) {
+              ingredient_list.push(list);
+            } else {
+              list.forEach(flatten);
+            }
+          }
+          ingredients.forEach(flatten);
+
+          ingredient_list.forEach(function (ingredient) {
+            ingredient_hash = add_to(ingredient_hash, ingredient);
+          }.bind(this));
+
+          this.splice('full_ingredients', 0, this.full_ingredients.length);
+          Object.keys(ingredient_hash).forEach(ingredient =>
+            this.push('full_ingredients', ingredient_hash[ingredient]));
+
+
+        }.bind(this));
+
+
         var moreInfo = this.$.recipe_info;
         var iconButton = Polymer.dom(event).localTarget;
         iconButton.icon = moreInfo.opened ? 'hardware:keyboard-arrow-down' : 'hardware:keyboard-arrow-up';
         moreInfo.toggle();
+        this.fire('iron-resize', {});
       },
-      get_recipe: function(){
-        return getJSON(BASE_URI + "/v2/recipes/search?output=" + this.item_id).then(function(recipe_id){
-          return getJSON(BASE_URI + "/v2/recipes/" + recipe_id);
-        }).then(function(recipe){
-          this.recipe = recipe;
-        }.bind(this));
+      get_item_key: function (item_id) {
+        return `${ITEM_PREFIX}${item_id}`;
+      },
+      getItemUrl: function(item_id) {
+        return `${GW2_API}/v2/items/${item_id}`
+      },
+      get_recipes_item_used_in: function (item_id) {
+        return getJSON(`${GW2_API}/v2/recipes/search?input=${item_id}`).then(function (recipe_list) {
+          var promise_list = [];
+          recipe_list.forEach(recipe_id => promise_list.push(getJSON(`${BASE_URI}/v2/recipes/${recipe_id}`)));
+
+          return Promise.all(promise_list);
+        });
+      },
+      get_item_recipe: function (item_id) {
+        return getJSON(`${GW2_API}/v2/recipes/search?output=${item_id}`).then(function (recipe_list) {
+          return getJSON(`${GW2_API}/v2/recipes/${recipe_list[0]}`)
+        });
+      },
+      get_full_recipe: function (multiplier, item_id) {
+        return getJSON(`${GW2_API}/v2/recipes/search?output=${item_id}`).then(function (recipe_list) {
+          if (recipe_list.length == 0) {
+            return {item_id: item_id, count: multiplier};
+          } else {
+            return getJSON(`${GW2_API}/v2/recipes/${recipe_list[0]}`).then(function (recipe) {
+              var promise_list = [];
+              recipe.ingredients.forEach(ingredient =>
+                promise_list.push(this.get_full_recipe(multiplier * ingredient.count, ingredient.item_id)));
+
+              return Promise.all(promise_list);
+
+            }.bind(this));
+          }
+        }.bind(this))
+      },
+      _itemIdChanged: function(){
+
+
+        var moreInfo = this.$.recipe_info;
+        var iconButton = Polymer.dom(event).localTarget;
+        iconButton.icon = 'hardware:keyboard-arrow-up';
+        moreInfo.hide();
+        this.splice('ingredient_in', 0, this.ingredient_in.length);
+        this.splice('ingredients', 0, this.ingredients.length);
+        this.splice('full_ingredients', 0, this.full_ingredients.length);
+        this.fire('iron-resize', {});
       }
+
 
     });
 

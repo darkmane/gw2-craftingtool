@@ -60,24 +60,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="bower_components/jquery/dist/jquery.js"></script>
   <script src="scripts/gw2.js"></script>
 
-  <script>
-
-    $(document).ready(function(){
-//      $('#item_list').on('response', function(e){
-//        console.log(JSON.stringify(e));
-//      });
-
-      getJSON('scripts/itemlist.json').then(function (items) {
-        for(var counter = 0; counter < items.length; counter++){
-          var item = items[counter];
-          //localStorage.setItem('gw2_item_' + item.id, JSON.stringify(item));
-        }
-      }, function (err) {
-        console.log(err);
-      });
-    });
-
-  </script>
 </head>
 
 <body unresolved>
@@ -153,13 +135,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <div class="content">
           <!--<iron-pages attr-for-selected="data-route" selected="{{route}}">-->
           <!--<div hidden$="{{!homeActive}}">-->
+          <paper-material elevation="1">
             <div>
-              <paper-material elevation="1">
-                <gw2-craftingtool></gw2-craftingtool>
-              </paper-material>
-
+              <gw2-craftingtool></gw2-craftingtool>
             </div>
-
+          </paper-material>
           <!--</iron-pages>-->
         </div>
       </paper-scroll-header-panel>
@@ -170,7 +150,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </paper-toast>
 
     <!-- Uncomment next block to enable Service Worker support (1/2) -->
-    <!--
     <paper-toast id="caching-complete"
                  duration="6000"
                  text="Caching complete! This app will work offline.">
@@ -181,11 +160,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                           skip-waiting
                           base-uri="bower_components/platinum-sw/bootstrap"
                           on-service-worker-installed="displayInstalledToast">
+
+      <platinum-sw-import-script href="gw2-serviceworker.js"></platinum-sw-import-script>
+      <!--<platinum-sw-fetch origin="https://render.guildwars2.com" path="/file/(.*).png" handler="iconFetchHandler"  ></platinum-sw-fetch>-->
+      <platinum-sw-fetch origin="https://api.guildwars2.com" path="/v2/items/(.*)" handler="itemFetchHandler" ></platinum-sw-fetch>
+      <!--<platinum-sw-fetch origin="https://api.guildwars2.com" path="/v2/recipes/(.*)" handler="recipeFetchHandler" ></platinum-sw-fetch>-->
       <platinum-sw-cache default-cache-strategy="fastest"
                          cache-config-file="cache-config.json">
       </platinum-sw-cache>
     </platinum-sw-register>
-    -->
 
   </template>
 
