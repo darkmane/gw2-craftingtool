@@ -162,9 +162,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                           on-service-worker-installed="displayInstalledToast">
 
       <platinum-sw-import-script href="gw2-serviceworker.js"></platinum-sw-import-script>
-      <!--<platinum-sw-fetch origin="https://render.guildwars2.com" path="/file/(.*).png" handler="iconFetchHandler"  ></platinum-sw-fetch>-->
-      <platinum-sw-fetch origin="https://api.guildwars2.com" path="/v2/items/(.*)" handler="itemFetchHandler" ></platinum-sw-fetch>
-      <!--<platinum-sw-fetch origin="https://api.guildwars2.com" path="/v2/recipes/(.*)" handler="recipeFetchHandler" ></platinum-sw-fetch>-->
+      <platinum-sw-fetch origin="https://api.guildwars2.com" path="/v2/recipes/(.*)" handler="recipeFetchHandler" ></platinum-sw-fetch>
       <platinum-sw-cache default-cache-strategy="fastest"
                          cache-config-file="cache-config.json">
       </platinum-sw-cache>

@@ -15,39 +15,44 @@
     recipe: `recipe_info`
   }
 
-  function fetchHandler(event, cache_name) {
-    let cachedResponse = caches.match(event.request).catch(function () {
-      return global.fetch(event.request).then(function (response) {
-        return global.caches.open(cache_name).then(function (cache) {
-          cache.put(event.request, response.clone());
-          return response;
-        });
+  function fetchHandler(request, cache_name) {
+    return caches.match(request).then(function(response) {
+      if (response) {
+        console.log('Found response in cache:', response);
+
+        return response;
+      }
+      console.log('No response found in cache. About to fetch from network...');
+
+      return fetch(request.url).then(function(response) {
+        console.log('Response from network is:', response);
+
+        return response;
+      }).catch(function(error) {
+        console.error('Fetching failed:', error);
+
+        throw error;
       });
-    }).catch(function () {
-      return global.caches.match('/sw-test/gallery/myLittleVader.jpg');
-    });
+    })
 
-    event.respondWith(cachedResponse);
+    //return caches.match(event.request).catch(function () {
+    //  return global.fetch(event.request).then(function (response) {
+    //    return global.caches.open(cache_name).then(function (cache) {
+    //      cache.put(event.request, response.clone());
+    //      return response;
+    //    });
+    //  });
+    //}).catch(function () {
+    //  return global.caches.match('/sw-test/gallery/myLittleVader.jpg');
+    //});
+
+
   }
 
-  global.itemFetchHandler = function (event, values, options) {
-    console.log("Item handler" );
-    return fetchHandler(event, CURRENT_CACHES.item);
-  }
-
-  global.iconFetchHandler = function (event, values, options) {
-    console.log("icon handler" );
-    return fetchHandler(event, CURRENT_CACHES.icon);
-  }
-
-  global.recipeFetchHandler = function (event, values, options) {
+  global.recipeFetchHandler = function (request, values, options) {
     console.log("Recipe handler" );
-    return fetchHandler(event, CURRENT_CACHES.recipe);
+    return fetchHandler(request, CURRENT_CACHES.recipe);
   }
 
-  global.siteFetchHandler = function (event, values, options) {
-    console.log("Site handler" );
-    return fetchHandler(event, CURRENT_CACHES.site);
-  }
 
 })(self);
