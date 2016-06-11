@@ -16,6 +16,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="Polymer Starter Kit">
+
   <title>Guild Wars 2 Crafting Tool</title>
 
   <!-- Place favicon.ico in the `app/` directory -->
@@ -57,6 +58,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <!-- For shared styles, shared-styles.html import in elements.html -->
   <style is="custom-style" include="shared-styles"></style>
+
   <script src="bower_components/jquery/dist/jquery.js"></script>
   <script src="scripts/gw2.js"></script>
 
@@ -66,7 +68,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
 
-    <paper-drawer-panel id="paperDrawerPanel" style="min-height: 100px">
+    <paper-drawer-panel id="paperDrawerPanel" responsive-width="840px">
+
       <!-- Drawer Scroll Header Panel -->
       <paper-scroll-header-panel drawer fixed>
 
@@ -76,6 +79,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </paper-toolbar>
 
         <!-- Drawer Content -->
+<<<<<<< HEAD
         <paper-menu attr-for-selected="data-route" selected="[[route]]">
           <a data-route="home" href="/">
             <iron-icon icon="home"></iron-icon>
@@ -105,6 +109,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </template>
           </iron-list>
 
+=======
+        <paper-menu class="app-menu" attr-for-selected="data-route" selected="[[route]]">
+          <a data-route="home" href="{{baseUrl}}">
+            <iron-icon icon="home"></iron-icon>
+            <span>Home</span>
+          </a>
+
+          <a data-route="users" href="{{baseUrl}}users">
+            <iron-icon icon="info"></iron-icon>
+            <span>Users</span>
+          </a>
+
+          <a data-route="contact" href="{{baseUrl}}contact">
+            <iron-icon icon="mail"></iron-icon>
+            <span>Contact</span>
+          </a>
+>>>>>>> c1f1c0245c1e758c87615890761fa945d9fdaee5
         </paper-menu>
       </paper-scroll-header-panel>
 
@@ -116,6 +137,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <span class="space"></span>
 
+
           <!-- Toolbar icons -->
           <paper-icon-button icon="refresh"></paper-icon-button>
           <paper-icon-button icon="search"></paper-icon-button>
@@ -123,24 +145,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <!-- Application name -->
           <div class="middle middle-container">
             <div class="app-name">Guildwars 2 Crafting Tool</div>
+
           </div>
 
           <!-- Application sub title -->
           <div class="bottom bottom-container">
             <div class="bottom-title">Complete Recipe List</div>
+
           </div>
         </paper-toolbar>
 
         <!-- Main Content -->
         <div class="content">
-          <!--<iron-pages attr-for-selected="data-route" selected="{{route}}">-->
+
+          <iron-pages attr-for-selected="data-route" selected="{{route}}">
           <!--<div hidden$="{{!homeActive}}">-->
           <paper-material elevation="1">
             <div>
               <gw2-craftingtool></gw2-craftingtool>
             </div>
           </paper-material>
-          <!--</iron-pages>-->
+          </iron-pages>
+
         </div>
       </paper-scroll-header-panel>
     </paper-drawer-panel>
@@ -150,6 +176,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </paper-toast>
 
     <!-- Uncomment next block to enable Service Worker support (1/2) -->
+
     <paper-toast id="caching-complete"
                  duration="6000"
                  text="Caching complete! This app will work offline.">
@@ -163,10 +190,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <platinum-sw-import-script href="gw2-serviceworker.js"></platinum-sw-import-script>
       <platinum-sw-fetch origin="https://api.guildwars2.com" path="/v2/recipes/(.*)" handler="recipeFetchHandler" ></platinum-sw-fetch>
+
       <platinum-sw-cache default-cache-strategy="fastest"
                          cache-config-file="cache-config.json">
       </platinum-sw-cache>
     </platinum-sw-register>
+
 
   </template>
 

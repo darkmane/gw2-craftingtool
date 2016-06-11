@@ -32,7 +32,11 @@ guide](https://www.firebase.com/docs/hosting/quickstart.html).
     builds everything and places it all in `dist`. So `dist` contains
     everything your application needs to run.
 
+<<<<<<< HEAD
 1.  Edit firebase.json, change firebase name, and add rewrites section [see example firebase.json](/docs/firebase.json)
+=======
+1.  Edit firebase.json, change firebase name, and add `rewrites` section ([see example firebase.json](/docs/firebase.json)).
+>>>>>>> c1f1c0245c1e758c87615890761fa945d9fdaee5
 
         {
           "firebase": "polymer-starter-kit",
@@ -43,12 +47,20 @@ guide](https://www.firebase.com/docs/hosting/quickstart.html).
             "**/node_modules/**"
           ],
           "rewrites": [ {
+<<<<<<< HEAD
             "source": "**",
+=======
+            "source": "!{/bower_components,/elements}/**",
+>>>>>>> c1f1c0245c1e758c87615890761fa945d9fdaee5
             "destination": "/index.html"
           } ]
         }
 
+<<<<<<< HEAD
 1.  Add `<base href="/">` to `head` near top of index.html, above `<!-- Place favicon.ico in the `app/` directory -->`
+=======
+1.  Add `<base href="/">` to `head` near top of index.html, above ``<!-- Place favicon.ico in the `app/` directory -->``
+>>>>>>> c1f1c0245c1e758c87615890761fa945d9fdaee5
 
 1.  Remove `hashbang: true` in routing.html near bottom. The call to `page` should look like this now:
 

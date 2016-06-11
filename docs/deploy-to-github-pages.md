@@ -14,7 +14,11 @@ You can deploy to github pages with a couple minor changes to Polymer Starter Ki
   }
   ```
 
+<<<<<<< HEAD
 2. Change `app.baseUrl = '/polymer-starter-kit/';`  to `app.baseUrl = '/your-pathname/';` (ex: if you repo is `github.com/username/bobs-awesome-site` you would change this to `bobs-awesome-site`)
+=======
+2. Change `app.baseUrl = '/polymer-starter-kit/';`  to `app.baseUrl = '/your-pathname/';` (ex: if you repo is `github.com/username/bobs-awesome-site` you would change this to `app.baseUrl = '/bobs-awesome-site/';`)
+>>>>>>> c1f1c0245c1e758c87615890761fa945d9fdaee5
 
 3. Add this code at the top of `<head>` tag in the [index.html](../app/index.html) to force HTTPS:
 

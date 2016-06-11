@@ -7,7 +7,11 @@
     "**/node_modules/**"
   ],
   "rewrites": [ {
+<<<<<<< HEAD
     "source": "**",
+=======
+    "source": "!{/bower_components,/elements}/**",
+>>>>>>> c1f1c0245c1e758c87615890761fa945d9fdaee5
     "destination": "/index.html"
   } ]
 }
