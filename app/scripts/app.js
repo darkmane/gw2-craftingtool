@@ -14,6 +14,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   // and give it some initial binding values
   // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
   var app = document.querySelector('#app');
+  var gw2_item_list = Polymer.dom(document).querySelector('#gw2_items_list');
 
   // Sets app default base URL
   app.baseUrl = '/';
@@ -77,5 +78,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.closeDrawer = function() {
     app.$.paperDrawerPanel.closeDrawer();
   };
+
+  app.handleEvent = function(e, detail){
+    console.log(JSON.stringify(e));
+  }
+
+  Polymer({
+    is: 'my-ajax',
+    handleEvent: function(){
+    console.log('boo');
+  }
+  })
 
 })(document);

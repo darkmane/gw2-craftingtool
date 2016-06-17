@@ -16,7 +16,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="Polymer Starter Kit">
-  <title>Guild Wars 2 Crafting Tool</title>
+  <title>Polymer Starter Kit</title>
 
   <!-- Place favicon.ico in the `app/` directory -->
 
@@ -57,8 +57,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <!-- For shared styles, shared-styles.html import in elements.html -->
   <style is="custom-style" include="shared-styles"></style>
-  <script src="bower_components/jquery/dist/jquery.js"></script>
-  <script src="scripts/gw2.js"></script>
+
+  <script src="bower_components/jquery/dist/jquery.min.js"></script>
+
+
 
 </head>
 
@@ -66,7 +68,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
 
-    <paper-drawer-panel id="paperDrawerPanel" style="min-height: 100px">
+    <paper-drawer-panel id="paperDrawerPanel">
       <!-- Drawer Scroll Header Panel -->
       <paper-scroll-header-panel drawer fixed>
 
@@ -77,34 +79,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <!-- Drawer Content -->
         <paper-menu attr-for-selected="data-route" selected="[[route]]">
-          <a data-route="home" href="/">
+          <a data-route="home" href="{{baseUrl}}">
             <iron-icon icon="home"></iron-icon>
             <span>Home</span>
           </a>
-          <carbon-location use-hash-as-path route="{{route}}"></carbon-location>
-          <carbon-route route="{{route}}" pattern="/" active="{{homeActive}}"></carbon-route>
-          <carbon-route route="{{route}}" pattern="/types/:typeId" active="{{typeActive}}"
-                        data="{{typeData}}"></carbon-route>
-          <carbon-route route="{{route}}" pattern="/types/:typeId/subTypes/:subtypeId" active="{{subtypeActive}}"
-                        data="{{subtypeData}}"></carbon-route>
-          <iron-ajax url="scripts/itemtypebyid.json" last-response="{{itemTypeArray}}" auto></iron-ajax>
 
-          <iron-list items="[[itemTypeArray]]" as="type">
-            <template>
-              <div>
-                <paper-item data-route="types" style="pointer-events: none;" href$="/types/{{type.typeId}}">[[type.name]]</paper-item>
+          <a data-route="users" href="{{baseUrl}}users">
+            <iron-icon icon="info"></iron-icon>
+            <span>Users</span>
+          </a>
 
-              <iron-list items="[[type.subTypes]]" as="subtype">
-                <template>
-                  <a href$="/type/{{type.id}}/subtypes/{{subtype.id}}">
-                    <paper-item data-route="types" style="pointer-events: none; margin-left: 15px;" href$="/types/{{type.typeId}}/subtypes/{{subtype.subtypeId}}"><span>[[subtype.displayName]]</span></paper-item>
-                  </a>
-                </template>
-              </iron-list>
-              </div>
-            </template>
-          </iron-list>
-
+          <a data-route="contact" href="{{baseUrl}}contact">
+            <iron-icon icon="mail"></iron-icon>
+            <span>Contact</span>
+          </a>
         </paper-menu>
       </paper-scroll-header-panel>
 
@@ -122,26 +110,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <!-- Application name -->
           <div class="middle middle-container">
-            <div class="app-name">Guildwars 2 Crafting Tool</div>
+            <div class="app-name">Polymer Starter Kit</div>
           </div>
 
           <!-- Application sub title -->
           <div class="bottom bottom-container">
-            <div class="bottom-title">Complete Recipe List</div>
+            <div class="bottom-title">The future of the web today</div>
           </div>
         </paper-toolbar>
 
         <!-- Main Content -->
-        <div class="content">
-          <!--<iron-pages attr-for-selected="data-route" selected="{{route}}">-->
-          <!--<div hidden$="{{!homeActive}}">-->
-          <paper-material elevation="1">
-            <div>
-              <gw2-craftingtool></gw2-craftingtool>
-            </div>
-          </paper-material>
-          <!--</iron-pages>-->
-        </div>
+        <template is="dom-bind" id="gw2_items_list">
+          <iron-ajax url="scripts/itemlist.json" last-response="{{data}}" auto></iron-ajax>
+          <iron-list items="[[data]]" as="item">
+            <template>
+              <div>
+                Name: [[item.name]]
+              </div>
+            </template>
+          </iron-list>
+        </template>
       </paper-scroll-header-panel>
     </paper-drawer-panel>
 
@@ -150,6 +138,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </paper-toast>
 
     <!-- Uncomment next block to enable Service Worker support (1/2) -->
+    <!--
     <paper-toast id="caching-complete"
                  duration="6000"
                  text="Caching complete! This app will work offline.">
@@ -160,19 +149,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                           skip-waiting
                           base-uri="bower_components/platinum-sw/bootstrap"
                           on-service-worker-installed="displayInstalledToast">
-
-      <platinum-sw-import-script href="gw2-serviceworker.js"></platinum-sw-import-script>
-      <platinum-sw-fetch origin="https://api.guildwars2.com" path="/v2/recipes/(.*)" handler="recipeFetchHandler" ></platinum-sw-fetch>
       <platinum-sw-cache default-cache-strategy="fastest"
                          cache-config-file="cache-config.json">
       </platinum-sw-cache>
     </platinum-sw-register>
+    -->
 
   </template>
 
   <!-- build:js scripts/app.js -->
   <script src="scripts/app.js"></script>
   <!-- endbuild-->
+
 </body>
 
 </html>

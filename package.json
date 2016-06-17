@@ -36,6 +36,12 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "letsencrypt": "^1.4.3"
+    "connect-livereload": "^0.5.4",
+    "express": "^4.13.4",
+    "gulp-file": "^0.3.0",
+    "letsencrypt": "^1.4.3",
+    "npid": "^0.4.0",
+    "stream-to-array": "^2.3.0",
+    "winston": "^2.2.0"
   }
 }

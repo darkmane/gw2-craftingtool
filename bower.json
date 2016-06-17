@@ -7,7 +7,14 @@
     "page": "visionmedia/page.js#~1.6.4",
     "paper-elements": "PolymerElements/paper-elements#^1.0.1",
     "platinum-elements": "PolymerElements/platinum-elements#^1.1.0",
-    "polymer": "Polymer/polymer#^1.2.0"
+    "polymer": "Polymer/polymer#^1.2.0",
+    "jquery": "^2.2.2",
+    "carbon-route": "^0.8.4",
+    "iron-localstorage": "PolymerElements/iron-localstorage#^1.0.5",
+    "paper-tabs": "PolymerElements/paper-tabs#^1.5.0",
+    "iron-pages": "PolymerElements/iron-pages#^1.0.7",
+    "iron-behaviors": "PolymerElements/iron-behaviors#^1.0.16",
+    "iron-resizable-behavior": "PolymerElements/iron-resizable-behavior#^1.0.3"
   },
   "devDependencies": {
     "web-component-tester": "^4.0.0"
