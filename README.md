@@ -11,7 +11,8 @@
 * Unit testing with [Web Component Tester](https://github.com/Polymer/web-component-tester)
 * Optional offline setup through [Platinum](https://elements.polymer-project.org/browse?package=platinum-elements) Service Worker elements
 * End-to-end Build Tooling (including [Vulcanize](https://github.com/Polymer/vulcanize))
-* [Recipes](/docs/README.md/) for ES2015 support, Polymer performance, using Chrome Dev Editor, Deploying to GitHub Pages, Deploying to Firebase, and Mobile Chrome Apps
+* [Recipes](/docs/README.md/) for ES2015 support, Polymer performance, using Chrome Dev Editor, Deploying to GitHub Pages, Deploying to Firebase, Mobile Chrome Apps and lint tools.
+
 
 ### Demo
 See latest Polymer Starter Kit Demo (from master) at https://polymerelements.github.io/polymer-starter-kit/
@@ -20,9 +21,10 @@ See latest Polymer Starter Kit Demo (from master) at https://polymerelements.git
 
 Check out the Polymer Starter Kit tutorials on [polymer-project.org](https://www.polymer-project.org):
 
-* [Set up the PSK](https://www.polymer-project.org/1.0/docs/start/psk/set-up.html)
-* [Create a page](https://www.polymer-project.org/1.0/docs/start/psk/create-a-page.html)
-* [Deploy the PSK to the web](https://www.polymer-project.org/1.0/docs/start/psk/deploy.html)
+* [Set up the PSK](docs/tutorials/set-up.md)
+* [Create a page](docs/tutorials/create-a-page.md)
+* [Deploy the PSK to the web](docs/tutorials/deploy.md)
+
 
 ## Getting Started
 
@@ -63,6 +65,8 @@ The full starter kit requires the following major dependencies:
 - npm, the node package manager, installed with Node.js and used to install Node.js packages.
 - gulp, a Node.js-based build tool.
 - bower, a Node.js-based package manager used to install front-end packages (like Polymer).
+- The starter kit gulp build process uses platform specific tools which is handled by node-gyp which is included in node.js. See https://github.com/nodejs/node-gyp/blob/master/README.md for additional platform specific dependencies.
+
 
 **To install dependencies:**
 
@@ -169,7 +173,7 @@ Components installed by Bower live in the `app/bower_components` directory. This
 ### Github Pages
 
 1. Uncomment this line  `// app.baseUrl = '/polymer-starter-kit/';` in app.js near the top
-2. Change `app.baseUrl = '/polymer-starter-kit/';`  to `app.baseUrl = '/your-pathname/';` (ex: if you repo is `github.com/username/bobs-awesome-site` you would change this to `bobs-awesome-site`)
+2. Change `app.baseUrl = '/polymer-starter-kit/';`  to `app.baseUrl = '/your-pathname/';` (ex: if you repo is `github.com/username/bobs-awesome-site` you would change this to `app.baseUrl = '/bobs-awesome-site/';`)
 3. Run `gulp build-deploy-gh-pages` from command line
 4. To see changes wait 1-2 minutes then load Github pages for your app (ex: https://polymerelements.github.io/polymer-starter-kit/)
 
@@ -226,7 +230,7 @@ To enable Service Worker support for Polymer Starter Kit project use these 3 ste
     runSequence(
       ['copy', 'styles'],
       'elements',
-      ['jshint', 'images', 'fonts', 'html'],
+      ['images', 'fonts', 'html'],
       'vulcanize', 'cache-config',
       cb);
   });
@@ -268,7 +272,8 @@ In order to guarantee that the latest version of your Service Worker script is b
 * Hit shift-reload to bypass the service worker as to ensure that the remaining tab isn't under the control of a service worker
 * Hit reload to let the newer version of the Service Worker control the page.
 
-If you find anything to still be stale, you can also try navigating to `chrome:serviceworker-internals` (in Chrome), finding the relevant Service Worker entry for your application and clicking 'Unregister' before refreshing your app. This will (of course) only clear it from the local development machine. If you have already deployed to production then further work will be necessary to remove it from your user's machines.
+If you find anything to still be stale, you can also try navigating to `chrome:serviceworker-internals` (in Chrome), finding the relevant Service Worker entry for your application and clicking 'Unregister' before refreshing your app. This will (of course) only clear it from the local development machine. If you have already deployed to production then further work will be necessary to remove it from your users' machines.
+
 
 #### Disable Service Worker support after you enabled it
 
@@ -278,6 +283,14 @@ If for any reason you need to disable Service Worker support after previously en
 2. Remove the two Platinum Service Worker elements (platinum-sw/..) in [app/elements/elements.html](https://github.com/PolymerElements/polymer-starter-kit/blob/master/app/elements/elements.html)
 3. Remove 'precache' from the list in the 'default' gulp task ([gulpfile.js](https://github.com/PolymerElements/polymer-starter-kit/blob/master/gulpfile.js))
 4. Navigate to `chrome://serviceworker-internals` and unregister any Service Workers registered by Polymer Starter Kit for your app just in case there's a copy of it cached.
+
+## Add to home screen banner
+
+If you've enabled Service Worker support, your app becomes eligible to trigger a Chrome [web app install banner](https://developers.google.com/web/fundamentals/engage-and-retain/app-install-banners/) if you add a `start_url` property to `manifest.json`, and point it to a valid URL. The best practice here is to add a query parameter to that URL, in order to distinguish between the app being launched from the web vs. the homescreen. Simply add this to `manifest.json` and you'll be all set:
+
+    "start_url": "/?homescreen=1"
+
+If you are implementing an offline experince using Service Worker, make sure to cache `/?homescreen=1`. For a short explanation, you can refer to [this segment](https://youtu.be/g7f1Az5fxgU?t=1435) from Rob Dodson's talk Building Progressive Web Apps with Polymer. A more in-depth exploration can be found at [Service Workers in Production](https://developers.google.com/web/showcase/case-study/service-workers-iowa#watch-out-for-extra-query-parameters).
 
 ## Yeoman support
 
@@ -327,7 +340,7 @@ Node.js (and npm) may have been installed into `C:\Program Files\`. Updating npm
 into `%AppData%\npm`, but your system will still use the npm version. You can avoid this by deleting your older npm from `C:\Program Files\nodejs`
 as described [here](https://github.com/npm/npm/issues/6309#issuecomment-67549380).
 
-If you get a browser console error indicating that an element you know you have installed is missing, try deleting the bower_components folder, then run `bower cache clean` followed by `bower install` to reinstall. This can be especially helpful when upgrading from a prior version of the Polymer Starter Kit. 
+If you get a browser console error indicating that an element you know you have installed is missing, try deleting the bower_components folder, then run `bower cache clean` followed by `bower install` to reinstall. This can be especially helpful when upgrading from a prior version of the Polymer Starter Kit.
 
 If the issue is to do with a failure somewhere else, you might find that due to a network issue
 a dependency failed to correctly install. We recommend running `npm cache clean` and deleting the `node_modules` directory followed by
@@ -368,7 +381,7 @@ If you are not using the build-blocks, but still wish for additional files (e.g 
 
 ### I'm finding the installation/tooling here overwhelming. What should I do?
 
-Don't worry! We've got your covered. Polymer Starter Kit tries to offer everything you need to build and optimize your apps for production, which is why we include the tooling we do. We realise however that our tooling setup may not be for everyone.
+Don't worry! We've got you covered. Polymer Starter Kit tries to offer everything you need to build and optimize your apps for production, which is why we include the tooling we do. We realise however that our tooling setup may not be for everyone.
 
 If you find that you just want the simplest setup possible, we recommend using Polymer Starter Kit light, which is available from the [Releases](https://github.com/PolymerElements/polymer-starter-kit/releases) page. This takes next to no time to setup.
 

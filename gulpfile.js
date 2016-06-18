@@ -1,4 +1,8 @@
 /*
+<<<<<<< HEAD
+=======
+@license
+>>>>>>> c1f1c0245c1e758c87615890761fa945d9fdaee5
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
@@ -8,6 +12,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 'use strict';
+
+// Include promise polyfill for node 0.10 compatibility
+require('es6-promise').polyfill();
+
 
 // Include Gulp & tools we'll use
 var gulp = require('gulp');
@@ -24,6 +32,7 @@ var historyApiFallback = require('connect-history-api-fallback');
 var packageJson = require('./package.json');
 var crypto = require('crypto');
 var ensureFiles = require('./tasks/ensure-files.js');
+
 var gw2 = require('./app/scripts/gw2.js')
 var file = require('gulp-file');
 var http_request = require('request');
@@ -49,6 +58,7 @@ var DIST = 'dist';
 var dist = function(subpath) {
   return !subpath ? DIST : path.join(DIST, subpath);
 };
+
 var baseURI = "https://api.guildwars2.com";
 
 var styleTask = function(stylesPath, srcs) {
@@ -195,9 +205,6 @@ gulp.task('styles', function() {
   return styleTask('styles', ['**/*.css']);
 });
 
-gulp.task('elements', function() {
-  return styleTask('elements', ['**/*.css']);
-});
 
 // Ensure that we are not missing required files for the project
 // "dot" files are specifically tricky due to them being hidden on
@@ -250,10 +257,20 @@ gulp.task('fonts', function() {
 });
 
 // Scan your HTML for assets & optimize them
-gulp.task('html', function() {
-  return optimizeHtmlTask(
-    ['app/**/*.html', 'app/**/*.json', '!app/{elements,test,bower_components}/**/*.html'],
-    dist());
+
+gulp.task('build', ['images', 'fonts'], function() {
+  return gulp.src(['app/**/*.html', '!app/{elements,test,bower_components}/**/*.html'])
+    .pipe($.useref())
+    .pipe($.if('*.js', $.uglify({
+      preserveComments: 'some'
+    })))
+    .pipe($.if('*.css', $.minifyCss()))
+    .pipe($.if('*.html', $.minifyHtml({
+      quotes: true,
+      empty: true,
+      spare: true
+    })))
+    .pipe(gulp.dest(dist()))
 });
 
 // Vulcanize granular configuration
@@ -309,7 +326,9 @@ gulp.task('clean', function() {
 });
 
 // Watch files for changes & reload
-gulp.task('serve', ['styles', 'elements'], function() {
+
+gulp.task('serve', ['styles'], function() {
+
   browserSync({
     port: 5000,
     notify: false,
@@ -332,9 +351,9 @@ gulp.task('serve', ['styles', 'elements'], function() {
     }
   });
 
-  gulp.watch(['app/**/*.html'], reload);
+  gulp.watch(['app/**/*.html', '!app/bower_components/**/*.html'], reload);
   gulp.watch(['app/styles/**/*.css'], ['styles', reload]);
-  gulp.watch(['app/elements/**/*.css'], ['elements', reload]);
+  gulp.watch(['app/scripts/**/*.js'], reload);
   gulp.watch(['app/images/**/*'], reload);
 });
 
@@ -366,8 +385,7 @@ gulp.task('default', ['clean'], function(cb) {
   // Uncomment 'cache-config' if you are going to use service workers.
   runSequence(
     ['ensureFiles', 'copy', 'styles'],
-    'elements',
-    ['images', 'fonts', 'html'],
+    'build',
     'vulcanize', 'cache-config',
     cb);
 });
@@ -380,17 +398,6 @@ gulp.task('build-deploy-gh-pages', function(cb) {
     cb);
 });
 
-// Deploy to GitHub pages gh-pages branch
-gulp.task('deploy-gh-pages', function() {
-  return gulp.src(dist('**/*'))
-    // Check if running task from Travis CI, if so run using GH_TOKEN
-    // otherwise run using ghPages defaults.
-    .pipe($.if(process.env.TRAVIS === 'true', $.ghPages({
-      remoteUrl: 'https://$GH_TOKEN@github.com/polymerelements/polymer-starter-kit.git',
-      silent: true,
-      branch: 'gh-pages'
-    }), $.ghPages()));
-});
 
 // Load tasks for web-component-tester
 // Adds tasks for `gulp test:local` and `gulp test:remote`
@@ -399,7 +406,11 @@ require('web-component-tester').gulp.init(gulp);
 // Load custom tasks from the `tasks` directory
 try {
   require('require-dir')('tasks');
-} catch (err) {}
+
+} catch (err) {
+  // Do nothing
+
+}
 
 var TypeLookupHash = {
   'Armor': {
@@ -552,14 +563,14 @@ function convertTypeHash2Array(typeHash) {
   // var returnArray = new Array(Object.keys(typeHash).length);
   var returnArray = [];
 
-  for(var typeCounter = 0;  typeCounter < Object.keys(typeHash).length; typeCounter++){
+  for (var typeCounter = 0; typeCounter < Object.keys(typeHash).length; typeCounter++) {
     var typeObject = typeHash[Object.keys(typeHash)[typeCounter]];
     var newTypeObject = {};
     var subtypeArray = [];
-    if(typeObject.subTypes != undefined){
-      for(var subtypeCounter = 0; subtypeCounter < Object.keys(typeObject.subTypes).length; subtypeCounter++){
+    if (typeObject.subTypes != undefined) {
+      for (var subtypeCounter = 0; subtypeCounter < Object.keys(typeObject.subTypes).length; subtypeCounter++) {
         var subtypeName = Object.keys(typeObject.subTypes)[subtypeCounter];
-        var subtypeObj = {name: subtypeName, subtypeId: typeObject.subTypes[subtypeName] };
+        var subtypeObj = {name: subtypeName, subtypeId: typeObject.subTypes[subtypeName]};
         subtypeArray[subtypeObj.subtypeId] = subtypeObj;
 
       }

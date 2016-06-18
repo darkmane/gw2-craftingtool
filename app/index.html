@@ -12,10 +12,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html lang="en">
 
 <head>
+
   <meta charset="utf-8">
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="Polymer Starter Kit">
+
   <title>Guild Wars 2 Crafting Tool</title>
 
   <!-- Place favicon.ico in the `app/` directory -->
@@ -57,8 +59,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <!-- For shared styles, shared-styles.html import in elements.html -->
   <style is="custom-style" include="shared-styles"></style>
+
   <script src="bower_components/jquery/dist/jquery.js"></script>
   <script src="scripts/gw2.js"></script>
+  <script>
+    window.addEventListener('WebComponentsReady',
+    function() {
+      document.getElementById('typeRoute').addEventListener("active-changed", function(e){
+        let tool = document.getElementById('craftingtool');
+        if(e.detail.value){
+          tool.setAttribute("type", "{{typeData.typeId}}");
+        }else{
+          tool.removeAttribute("type");
+          tool.type = undefined;
+        }
+        //
+      });
+
+      document.getElementById('subtypeRoute').addEventListener("active-changed", function(e){
+        let tool = document.getElementById('craftingtool');
+        if(e.detail.value){
+          tool.setAttribute("subtype", "{{subtypeData.subtypeId}}");
+        }else{
+          console.log("Removing subtype");
+          tool.removeAttribute("subtype");
+          tool.subtype = undefined;
+        }
+      });
+
+    });
+  </script>
 
 </head>
 
@@ -66,7 +96,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
 
-    <paper-drawer-panel id="paperDrawerPanel" style="min-height: 100px">
+    <paper-drawer-panel id="paperDrawerPanel" responsive-width="840px">
+
       <!-- Drawer Scroll Header Panel -->
       <paper-scroll-header-panel drawer fixed>
 
@@ -76,34 +107,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </paper-toolbar>
 
         <!-- Drawer Content -->
+
         <paper-menu attr-for-selected="data-route" selected="[[route]]">
           <a data-route="home" href="/">
             <iron-icon icon="home"></iron-icon>
             <span>Home</span>
           </a>
-          <carbon-location use-hash-as-path route="{{route}}"></carbon-location>
-          <carbon-route route="{{route}}" pattern="/" active="{{homeActive}}"></carbon-route>
-          <carbon-route route="{{route}}" pattern="/types/:typeId" active="{{typeActive}}"
-                        data="{{typeData}}"></carbon-route>
-          <carbon-route route="{{route}}" pattern="/types/:typeId/subTypes/:subtypeId" active="{{subtypeActive}}"
-                        data="{{subtypeData}}"></carbon-route>
           <iron-ajax url="scripts/itemtypebyid.json" last-response="{{itemTypeArray}}" auto></iron-ajax>
 
-          <iron-list items="[[itemTypeArray]]" as="type">
-            <template>
-              <div>
-                <paper-item data-route="types" style="pointer-events: none;" href$="/types/{{type.typeId}}">[[type.name]]</paper-item>
 
-              <iron-list items="[[type.subTypes]]" as="subtype">
-                <template>
-                  <a href$="/type/{{type.id}}/subtypes/{{subtype.id}}">
-                    <paper-item data-route="types" style="pointer-events: none; margin-left: 15px;" href$="/types/{{type.typeId}}/subtypes/{{subtype.subtypeId}}"><span>[[subtype.displayName]]</span></paper-item>
+
+
+            <template is="dom-repeat" items="[[itemTypeArray]]" as="type">
+              <div>
+                <a href="#/types/{{type.typeId}}">
+                  <paper-item data-route="types" style="pointer-events: none;">[[type.displayName]]</paper-item>
+                </a>
+
+                <template is="dom-repeat" items="[[type.subTypes]]" as="subtype">
+
+                  <a href="#/types/{{type.typeId}}/subtypes/{{subtype.subtypeId}}">
+                    <paper-item style="pointer-events: none; margin-left: 15px;" href$="#/types/{{type.typeId}}/subtypes/{{subtype.subtypeId}}"><span>[[subtype.displayName]]</span></paper-item>
                   </a>
                 </template>
-              </iron-list>
+
               </div>
             </template>
-          </iron-list>
+
 
         </paper-menu>
       </paper-scroll-header-panel>
@@ -116,6 +146,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <span class="space"></span>
 
+
           <!-- Toolbar icons -->
           <paper-icon-button icon="refresh"></paper-icon-button>
           <paper-icon-button icon="search"></paper-icon-button>
@@ -123,24 +154,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <!-- Application name -->
           <div class="middle middle-container">
             <div class="app-name">Guildwars 2 Crafting Tool</div>
+
           </div>
 
           <!-- Application sub title -->
           <div class="bottom bottom-container">
             <div class="bottom-title">Complete Recipe List</div>
+
           </div>
         </paper-toolbar>
 
         <!-- Main Content -->
         <div class="content">
+
+          <app-location use-hash-as-path route="{{route}}"></app-location>
+
+          <app-route id="typeRoute" route="[[route]]"  pattern="/types/:typeId" active="{{typeActive}}"
+                     data="{{typeData}}" tail="{{typeTail}}"></app-route>
+          <app-route id="subtypeRoute" route="[[route]]" pattern="/types/:typeId/subtypes/:subtypeId" active="{{subtypeActive}}"
+                     data="{{subtypeData}}"></app-route>
+
+
+          <!--<section data-route="home">-->
           <!--<iron-pages attr-for-selected="data-route" selected="{{route}}">-->
           <!--<div hidden$="{{!homeActive}}">-->
           <paper-material elevation="1">
             <div>
-              <gw2-craftingtool></gw2-craftingtool>
+              <gw2-craftingtool id='craftingtool' type="{{typeData.typeId}}" subtype="{{subtypeData.subtypeId}}"></gw2-craftingtool>
             </div>
           </paper-material>
           <!--</iron-pages>-->
+          <!--</section>-->
         </div>
       </paper-scroll-header-panel>
     </paper-drawer-panel>
@@ -150,6 +194,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </paper-toast>
 
     <!-- Uncomment next block to enable Service Worker support (1/2) -->
+
     <paper-toast id="caching-complete"
                  duration="6000"
                  text="Caching complete! This app will work offline.">
@@ -163,10 +208,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <platinum-sw-import-script href="gw2-serviceworker.js"></platinum-sw-import-script>
       <platinum-sw-fetch origin="https://api.guildwars2.com" path="/v2/recipes/(.*)" handler="recipeFetchHandler" ></platinum-sw-fetch>
+
       <platinum-sw-cache default-cache-strategy="fastest"
                          cache-config-file="cache-config.json">
       </platinum-sw-cache>
     </platinum-sw-register>
+
 
   </template>
 

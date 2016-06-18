@@ -1,4 +1,8 @@
 /*
+<<<<<<< HEAD
+=======
+@license
+>>>>>>> c1f1c0245c1e758c87615890761fa945d9fdaee5
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
@@ -7,7 +11,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-(function(document) {
+(function (document) {
   'use strict';
 
   // Grab a reference to our auto-binding template
@@ -78,16 +82,5 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.closeDrawer = function() {
     app.$.paperDrawerPanel.closeDrawer();
   };
-
-  app.handleEvent = function(e, detail){
-    console.log(JSON.stringify(e));
-  }
-
-  Polymer({
-    is: 'my-ajax',
-    handleEvent: function(){
-    console.log('boo');
-  }
-  })
 
 })(document);

@@ -1,5 +1,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="./gw2-recipe.html">
 <script src="../scripts/gw2.js"></script>
 <style>
@@ -15,9 +17,8 @@
 </style>
 <dom-module id="gw2-craftingtool">
   <template>
-
-    <iron-ajax id="item_list" url="../scripts/itemlist.json" handle-as="json" last-response="{{data}}" verbose  auto></iron-ajax>
-    <iron-list items="[[data]]" as="item" style="min-height: 200px" class="flex">
+    <iron-ajax id="item_list" url="../scripts/itemlist.json" handle-as="json" last-response="{{data}}" auto></iron-ajax>
+    <iron-list items="[[type_filter(data)]]" as="item" style="min-height: 200px" class="flex">
       <template>
         <gw2-recipe item_id="{{item.id}}"></gw2-recipe>
       </template>
@@ -28,8 +29,26 @@
     Polymer({
       is: 'gw2-craftingtool',
       properties: {
-        type: Number,
-        subtype: Number
+        type: {type: Number, observer: '_itemTypeUpdater'},
+        subtype: {type: Number, observer: '_itemTypeUpdater'}
+      },
+      type_filter: function (items) {
+        return items.filter(function(item){
+            if(this.type == undefined && this.subtype == undefined)
+            {
+              return true;
+            }
+
+            let rv = (item.type_id == this.type);
+
+            if (rv && this.subtype != undefined && item.subtype_id != null) {
+              rv = (item.subtype_id == this.subtype);
+            }
+            return rv;
+        }.bind(this));
+      }
+      , _itemTypeUpdater: function(e){
+        this.$.item_list.generateRequest();
       }
     });
 
