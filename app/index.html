@@ -62,6 +62,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <script src="bower_components/jquery/dist/jquery.js"></script>
   <script src="scripts/gw2.js"></script>
+  <script>
+    window.addEventListener('WebComponentsReady',
+    function() {
+      document.getElementById('typeRoute').addEventListener("active-changed", function(e){
+        let tool = document.getElementById('craftingtool');
+        if(e.detail.value){
+          tool.setAttribute("type", "{{typeData.typeId}}");
+        }else{
+          tool.removeAttribute("type");
+          tool.type = undefined;
+        }
+        //
+      });
+
+      document.getElementById('subtypeRoute').addEventListener("active-changed", function(e){
+        let tool = document.getElementById('craftingtool');
+        if(e.detail.value){
+          tool.setAttribute("subtype", "{{subtypeData.subtypeId}}");
+        }else{
+          console.log("Removing subtype");
+          tool.removeAttribute("subtype");
+          tool.subtype = undefined;
+        }
+      });
+
+    });
+  </script>
 
 </head>
 
@@ -88,22 +115,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </a>
           <iron-ajax url="scripts/itemtypebyid.json" last-response="{{itemTypeArray}}" auto></iron-ajax>
 
-          <iron-list items="[[itemTypeArray]]" as="type">
-            <template>
+
+
+
+            <template is="dom-repeat" items="[[itemTypeArray]]" as="type">
               <div>
                 <a href="#/types/{{type.typeId}}">
-                <paper-item data-route="types" style="pointer-events: none;">[[type.name]]</paper-item>
+                  <paper-item data-route="types" style="pointer-events: none;">[[type.displayName]]</paper-item>
                 </a>
-              <iron-list items="[[type.subTypes]]" as="subtype" >
-                <template>
+
+                <template is="dom-repeat" items="[[type.subTypes]]" as="subtype">
+
                   <a href="#/types/{{type.typeId}}/subtypes/{{subtype.subtypeId}}">
                     <paper-item style="pointer-events: none; margin-left: 15px;" href$="#/types/{{type.typeId}}/subtypes/{{subtype.subtypeId}}"><span>[[subtype.displayName]]</span></paper-item>
                   </a>
                 </template>
-              </iron-list>
+
               </div>
             </template>
-          </iron-list>
 
 
         </paper-menu>
@@ -140,21 +169,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <app-location use-hash-as-path route="{{route}}"></app-location>
 
-          <app-route route="{{route}}" pattern="/types/:typeId" active="{{typeActive}}"
+          <app-route id="typeRoute" route="[[route]]"  pattern="/types/:typeId" active="{{typeActive}}"
                      data="{{typeData}}" tail="{{typeTail}}"></app-route>
-          <app-route route="{{typeTail}}" pattern="/subtypes/:subtypeId" active="{{subtypeActive}}"
+          <app-route id="subtypeRoute" route="[[route]]" pattern="/types/:typeId/subtypes/:subtypeId" active="{{subtypeActive}}"
                      data="{{subtypeData}}"></app-route>
-          <h1>{{route.path}} {{route.prefix}}
 
-            <br>Type: {{typeActive}} Data: {{typeData.typeId}}
-            <br>Subtype: {{subtypeActive}} Data: {{subtypeData.subtypeId}}</h1>
 
           <!--<section data-route="home">-->
           <!--<iron-pages attr-for-selected="data-route" selected="{{route}}">-->
           <!--<div hidden$="{{!homeActive}}">-->
           <paper-material elevation="1">
             <div>
-              <gw2-craftingtool type="{{typeData.typeId}}" subtype="{{subtypeData.subtypeId}}"></gw2-craftingtool>
+              <gw2-craftingtool id='craftingtool' type="{{typeData.typeId}}" subtype="{{subtypeData.subtypeId}}"></gw2-craftingtool>
             </div>
           </paper-material>
           <!--</iron-pages>-->

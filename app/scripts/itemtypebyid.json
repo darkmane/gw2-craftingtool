@@ -1,60 +1,387 @@
-[{"typeId":0,"name":"Armor",
-    "subTypes":[{"name":"Boots","displayName":"Boots", "subtypeId":0},
-                {"name":"Coat","displayName":"Coat", "subtypeId":1},
-                {"name":"Gloves","displayName":"Gloves", "subtypeId":2},
-                {"name":"Helm","displayName":"Helm", "subtypeId":3},
-                {"name":"HelmAquatic","displayName":"Helm (Aquatic)", "subtypeId":4},
-{"name":"Leggings","displayName":"Leggings", "subtypeId":5},
-{"name":"Shoulders","displayName":"Shoulders", "subtypeId":6}]},
-{"typeId":3,"name":"Consumable","subTypes":[{"name":"AppearanceChange","displayName":"Appearance Change", "subtypeId":0},
-{"name":"Booze","displayName":"Booze", "subtypeId":1},
-{"name":"ContractNpc","displayName":"Contract NPC", "subtypeId":2},
-{"name":"Food","displayName":"Food", "subtypeId":3},
-{"name":"Generic","displayName":"Generic", "subtypeId":4},
-{"name":"Halloween","displayName":"Halloween", "subtypeId":5},
-{"name":"Immediate","displayName":"Immediate", "subtypeId":6},
-{"name":"Transmutation","displayName":"Transmutation", "subtypeId":7},
-{"name":"Unlock","displayName":"Unlock", "subtypeId":8},
-{"name":"UpgradeRemoval","displayName":"Upgrade Removal", "subtypeId":9},
-{"name":"Utility","displayName":"Utility", "subtypeId":10},
-{"name":"TeleportToFriend","displayName":"Teleport to Friend", "subtypeId":11}]},
-{"typeId":4,"name":"Container","subTypes":[{"name":"Default","displayName":"Default", "subtypeId":0},
-{"name":"GiftBox","displayName":"Gift Box", "subtypeId":1},
-{"name":"OpenUI","displayName":"Open UI", "subtypeId":2}]},
-{"typeId":6,"name":"Gathering","subTypes":[{"name":"Foraging","displayName":"Foraging", "subtypeId":0},
-{"name":"Logging","displayName":"Logging", "subtypeId":1},
-{"name":"Mining","displayName":"Mining", "subtypeId":2}]},
-{"typeId":7,"name":"Gizmo","subTypes":[{"name":"Default","displayName":"Default", "subtypeId":0},
-{"name":"ContainerKey","displayName":"Containter Key", "subtypeId":1},
-{"name":"RentableContractNpc","displayName":"Rentable Contract NPC", "subtypeId":2},
-{"name":"UnlimitedConsumable","displayName":"Unlimited Consumable", "subtypeId":3}]},
-{"typeId":11,"name":"Trinket","subTypes":[{"name":"Accessory","displayName":"Accessory", "subtypeId":0},
-{"name":"Amulet","displayName":"Amulet", "subtypeId":1},
-{"name":"Ring","displayName":"Ring", "subtypeId":2}]},
-{"typeId":13,"name":"UpgradeComponent","subTypes":[{"name":"Default","displayName":"Upgrade Component", "subtypeId":0},
-{"name":"Gem","displayName":"Gem", "subtypeId":1},
-{"name":"Rune","displayName":"Rune", "subtypeId":2},
-{"name":"Sigil","displayName":"Sigil", "subtypeId":3}]},
-{"typeId":14,"name":"Weapon","subTypes":[{"name":"Axe","displayName":"Axe", "subtypeId":0},
-{"name":"Dagger","displayName":"Dagger", "subtypeId":1},
-{"name":"Mace","displayName":"Mace", "subtypeId":2},
-{"name":"Pistol","displayName":"Pistol", "subtypeId":3},
-{"name":"Scepter","displayName":"Scepter", "subtypeId":4},
-{"name":"Sword","displayName":"Sword", "subtypeId":5},
-{"name":"Focus","displayName":"Focus", "subtypeId":6},
-{"name":"Shield","displayName":"Shield", "subtypeId":7},
-{"name":"Torch","displayName":"Torch", "subtypeId":8},
-{"name":"Warhorn","displayName":"Warhorn", "subtypeId":9},
-{"name":"Greatsword","displayName":"Greatsword", "subtypeId":10},
-{"name":"Hammer","displayName":"Hammer", "subtypeId":11},
-{"name":"LongBow","displayName":"Long Bow", "subtypeId":12},
-{"name":"Rifle","displayName":"Rifle", "subtypeId":13},
-{"name":"ShortBow","displayName":"Short Bow", "subtypeId":14},
-{"name":"Staff","displayName":"Staff", "subtypeId":15},
-{"name":"Harpoon","displayName":"Harpoon", "subtypeId":16},
-{"name":"Speargun","displayName":"Speargun", "subtypeId":17},
-{"name":"Trident","displayName":"Trident", "subtypeId":18},
-{"name":"LargeBundle","displayName":"Large Bundle", "subtypeId":19},
-{"name":"SmallBundle","displayName":"Small Bundle", "subtypeId":20},
-{"name":"Toy","displayName":"Toy", "subtypeId":21},
-{"name":"TwoHandedToy","displayName":"Two Handed Toy", "subtypeId":22}]}]
+[
+  {
+    "typeId": 0,
+    "name": "Armor",
+    "displayName": "Armor",
+    "subTypes": [
+      {
+        "name": "Boots",
+        "displayName": "Boots",
+        "subtypeId": 0
+      },
+      {
+        "name": "Coat",
+        "displayName": "Coat",
+        "subtypeId": 1
+      },
+      {
+        "name": "Gloves",
+        "displayName": "Gloves",
+        "subtypeId": 2
+      },
+      {
+        "name": "Helm",
+        "displayName": "Helm",
+        "subtypeId": 3
+      },
+      {
+        "name": "HelmAquatic",
+        "displayName": "Helm (Aquatic)",
+        "subtypeId": 4
+      },
+      {
+        "name": "Leggings",
+        "displayName": "Leggings",
+        "subtypeId": 5
+      },
+      {
+        "name": "Shoulders",
+        "displayName": "Shoulders",
+        "subtypeId": 6
+      }
+    ]
+  },
+  {
+    "typeId": 1,
+    "name": "Back",
+    "displayName": "Back Item",
+    "subTypes": []
+  },
+  {
+    "typeId": 2,
+    "name": "Bag",
+    "displayName": "Bag",
+    "subTypes": []
+  },
+  {
+    "typeId": 3,
+    "name": "Consumable",
+    "displayName": "Consumable",
+    "subTypes": [
+      {
+        "name": "AppearanceChange",
+        "displayName": "Appearance Change",
+        "subtypeId": 0
+      },
+      {
+        "name": "Booze",
+        "displayName": "Booze",
+        "subtypeId": 1
+      },
+      {
+        "name": "ContractNpc",
+        "displayName": "Contract NPC",
+        "subtypeId": 2
+      },
+      {
+        "name": "Food",
+        "displayName": "Food",
+        "subtypeId": 3
+      },
+      {
+        "name": "Generic",
+        "displayName": "Generic",
+        "subtypeId": 4
+      },
+      {
+        "name": "Halloween",
+        "displayName": "Halloween",
+        "subtypeId": 5
+      },
+      {
+        "name": "Immediate",
+        "displayName": "Immediate",
+        "subtypeId": 6
+      },
+      {
+        "name": "Transmutation",
+        "displayName": "Transmutation",
+        "subtypeId": 7
+      },
+      {
+        "name": "Unlock",
+        "displayName": "Unlock",
+        "subtypeId": 8
+      },
+      {
+        "name": "UpgradeRemoval",
+        "displayName": "Upgrade Removal",
+        "subtypeId": 9
+      },
+      {
+        "name": "Utility",
+        "displayName": "Utility",
+        "subtypeId": 10
+      },
+      {
+        "name": "TeleportToFriend",
+        "displayName": "Teleport to Friend",
+        "subtypeId": 11
+      }
+    ]
+  },
+  {
+    "typeId": 4,
+    "name": "Container",
+    "displayName": "Container",
+    "subTypes": [
+      {
+        "name": "Default",
+        "displayName": "Default",
+        "subtypeId": 0
+      },
+      {
+        "name": "GiftBox",
+        "displayName": "Gift Box",
+        "subtypeId": 1
+      },
+      {
+        "name": "OpenUI",
+        "displayName": "Open UI",
+        "subtypeId": 2
+      }
+    ]
+  },
+  {
+    "typeId": 5,
+    "name": "CraftingMaterial",
+    "displayName": "Crafting Material",
+    "subTypes": []
+  },
+  {
+    "typeId": 6,
+    "name": "Gathering",
+    "displayName": "Gathering Tools",
+    "subTypes": [
+      {
+        "name": "Foraging",
+        "displayName": "Foraging",
+        "subtypeId": 0
+      },
+      {
+        "name": "Logging",
+        "displayName": "Logging",
+        "subtypeId": 1
+      },
+      {
+        "name": "Mining",
+        "displayName": "Mining",
+        "subtypeId": 2
+      }
+    ]
+  },
+  {
+    "typeId": 7,
+    "name": "Gizmo",
+    "displayName": "Gizmo",
+    "subTypes": [
+      {
+        "name": "Default",
+        "displayName": "Default",
+        "subtypeId": 0
+      },
+      {
+        "name": "ContainerKey",
+        "displayName": "Containter Key",
+        "subtypeId": 1
+      },
+      {
+        "name": "RentableContractNpc",
+        "displayName": "Rentable Contract NPC",
+        "subtypeId": 2
+      },
+      {
+        "name": "UnlimitedConsumable",
+        "displayName": "Unlimited Consumable",
+        "subtypeId": 3
+      }
+    ]
+  },
+  { "typeId": 8,
+    "name": "MiniPet",
+    "displayName": "Mini Pet",
+    "subTypes": []},
+  { "typeId": 9,
+    "name": "Tool",
+    "displayName": "Tool",
+    "subTypes": []},
+  { "typeId": 10,
+    "name": "Trait",
+    "displayName": "Trait",
+    "subTypes": []},
+  {
+    "typeId": 11,
+    "name": "Trinket",
+    "displayName": "Trinket",
+    "subTypes": [
+      {
+        "name": "Accessory",
+        "displayName": "Accessory",
+        "subtypeId": 0
+      },
+      {
+        "name": "Amulet",
+        "displayName": "Amulet",
+        "subtypeId": 1
+      },
+      {
+        "name": "Ring",
+        "displayName": "Ring",
+        "subtypeId": 2
+      }
+    ]
+  },
+  { "typeId": 12,
+    "name": "Trophy",
+    "displayName": "Trophy",
+    "subTypes": []},
+  {
+    "typeId": 13,
+    "name": "UpgradeComponent",
+    "displayName": "Upgrade Component",
+    "subTypes": [
+      {
+        "name": "Default",
+        "displayName": "Upgrade Component",
+        "subtypeId": 0
+      },
+      {
+        "name": "Gem",
+        "displayName": "Gem",
+        "subtypeId": 1
+      },
+      {
+        "name": "Rune",
+        "displayName": "Rune",
+        "subtypeId": 2
+      },
+      {
+        "name": "Sigil",
+        "displayName": "Sigil",
+        "subtypeId": 3
+      }
+    ]
+  },
+  {
+    "typeId": 14,
+    "name": "Weapon",
+    "displayName": "Weapon",
+    "subTypes": [
+      {
+        "name": "Axe",
+        "displayName": "Axe",
+        "subtypeId": 0
+      },
+      {
+        "name": "Dagger",
+        "displayName": "Dagger",
+        "subtypeId": 1
+      },
+      {
+        "name": "Mace",
+        "displayName": "Mace",
+        "subtypeId": 2
+      },
+      {
+        "name": "Pistol",
+        "displayName": "Pistol",
+        "subtypeId": 3
+      },
+      {
+        "name": "Scepter",
+        "displayName": "Scepter",
+        "subtypeId": 4
+      },
+      {
+        "name": "Sword",
+        "displayName": "Sword",
+        "subtypeId": 5
+      },
+      {
+        "name": "Focus",
+        "displayName": "Focus",
+        "subtypeId": 6
+      },
+      {
+        "name": "Shield",
+        "displayName": "Shield",
+        "subtypeId": 7
+      },
+      {
+        "name": "Torch",
+        "displayName": "Torch",
+        "subtypeId": 8
+      },
+      {
+        "name": "Warhorn",
+        "displayName": "Warhorn",
+        "subtypeId": 9
+      },
+      {
+        "name": "Greatsword",
+        "displayName": "Greatsword",
+        "subtypeId": 10
+      },
+      {
+        "name": "Hammer",
+        "displayName": "Hammer",
+        "subtypeId": 11
+      },
+      {
+        "name": "LongBow",
+        "displayName": "Long Bow",
+        "subtypeId": 12
+      },
+      {
+        "name": "Rifle",
+        "displayName": "Rifle",
+        "subtypeId": 13
+      },
+      {
+        "name": "ShortBow",
+        "displayName": "Short Bow",
+        "subtypeId": 14
+      },
+      {
+        "name": "Staff",
+        "displayName": "Staff",
+        "subtypeId": 15
+      },
+      {
+        "name": "Harpoon",
+        "displayName": "Harpoon",
+        "subtypeId": 16
+      },
+      {
+        "name": "Speargun",
+        "displayName": "Speargun",
+        "subtypeId": 17
+      },
+      {
+        "name": "Trident",
+        "displayName": "Trident",
+        "subtypeId": 18
+      },
+      {
+        "name": "LargeBundle",
+        "displayName": "Large Bundle",
+        "subtypeId": 19
+      },
+      {
+        "name": "SmallBundle",
+        "displayName": "Small Bundle",
+        "subtypeId": 20
+      },
+      {
+        "name": "Toy",
+        "displayName": "Toy",
+        "subtypeId": 21
+      },
+      {
+        "name": "TwoHandedToy",
+        "displayName": "Two Handed Toy",
+        "subtypeId": 22
+      }
+    ]
+  }
+]

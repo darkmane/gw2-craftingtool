@@ -98,7 +98,8 @@
       properties: {
         item_id: {
           type: Number,
-          reflectToAttribute: true
+          reflectToAttribute: true,
+          observer: '_itemIdChanged'
         },
         item: {
           type: Object
@@ -217,7 +218,7 @@
       get_recipes_item_used_in: function (item_id) {
         return getJSON(`${GW2_API}/v2/recipes/search?input=${item_id}`).then(function (recipe_list) {
           var promise_list = [];
-          recipe_list.forEach(recipe_id => promise_list.push(getJSON(`${BASE_URI}/v2/recipes/${recipe_id}`)));
+          recipe_list.forEach(recipe_id => promise_list.push(getJSON(`${GW2_API}/v2/recipes/${recipe_id}`)));
 
           return Promise.all(promise_list);
         });
@@ -243,11 +244,11 @@
           }
         }.bind(this))
       },
-      _itemIdChanged: function(){
+      _itemIdChanged: function(event){
 
 
         var moreInfo = this.$.recipe_info;
-        var iconButton = Polymer.dom(event).localTarget;
+        var iconButton = this.$.drawer_button;
         iconButton.icon = 'hardware:keyboard-arrow-up';
         moreInfo.hide();
         this.splice('ingredient_in', 0, this.ingredient_in.length);
