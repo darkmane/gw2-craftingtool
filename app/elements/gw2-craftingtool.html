@@ -17,7 +17,7 @@
 </style>
 <dom-module id="gw2-craftingtool">
   <template>
-    <iron-ajax id="item_list" url="../scripts/itemlist.json" handle-as="json" last-response="{{data}}" auto></iron-ajax>
+    <iron-ajax id="item_list" url="../itemlist.json" handle-as="json" last-response="{{data}}" auto></iron-ajax>
     <iron-list items="[[type_filter(data)]]" as="item" style="min-height: 200px" class="flex">
       <template>
         <gw2-recipe item_id="{{item.id}}"></gw2-recipe>
