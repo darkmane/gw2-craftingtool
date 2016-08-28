@@ -172,19 +172,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <app-route id="typeRoute" route="[[route]]"  pattern="/types/:typeId" active="{{typeActive}}"
                      data="{{typeData}}" tail="{{typeTail}}"></app-route>
           <app-route id="subtypeRoute" route="[[route]]" pattern="/types/:typeId/subtypes/:subtypeId" active="{{subtypeActive}}"
-                     data="{{subtypeData}}"></app-route>
+          <app-route id="settingsRoute" route="[[route]]" pattern="/settings" active="{{settingsActive}}" ></app-route>
 
 
-          <!--<section data-route="home">-->
-          <!--<iron-pages attr-for-selected="data-route" selected="{{route}}">-->
-          <!--<div hidden$="{{!homeActive}}">-->
           <paper-material elevation="1">
-            <div>
+            <div hidden$="{{!settingsActive}}">
               <gw2-craftingtool id='craftingtool' type="{{typeData.typeId}}" subtype="{{subtypeData.subtypeId}}"></gw2-craftingtool>
-            </div>
-          </paper-material>
-          <!--</iron-pages>-->
-          <!--</section>-->
+			      </div>
+						<div hidden$="{{settingsActive}}">
+										<p>If you provide an API key from <a href='https://account.arena.net/applications'>Arenanet Applications</a> that provides access to your wallet, tradingpost, account and inventories, the app will allow you to see how much it would cost you to purchase the ingredients you do not have for a recipe</p>
+										<paper-input label="API Key"></paper-input>
+		        </div>
+						</paper-material>
         </div>
       </paper-scroll-header-panel>
     </paper-drawer-panel>

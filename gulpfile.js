@@ -1,20 +1,11 @@
-/*
-<<<<<<< HEAD
-=======
-@license
->>>>>>> c1f1c0245c1e758c87615890761fa945d9fdaee5
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
-*/
+/*jslint node:true */
+/*jslint white: true*/
 
 'use strict';
 
 // Include promise polyfill for node 0.10 compatibility
 require('es6-promise').polyfill();
+
 
 
 // Include Gulp & tools we'll use
@@ -33,7 +24,7 @@ var packageJson = require('./package.json');
 var crypto = require('crypto');
 var ensureFiles = require('./tasks/ensure-files.js');
 
-var gw2 = require('./app/scripts/gw2.js')
+var gw2 = require('./app/scripts/gw2.js');
 var file = require('gulp-file');
 var http_request = require('request');
 var through2 = require('through2');
@@ -55,14 +46,14 @@ var AUTOPREFIXER_BROWSERS = [
 
 var DIST = 'dist';
 
-var dist = function(subpath) {
+var dist = function (subpath) {
   return !subpath ? DIST : path.join(DIST, subpath);
 };
 
 var baseURI = "https://api.guildwars2.com";
 
-var styleTask = function(stylesPath, srcs) {
-  return gulp.src(srcs.map(function(src) {
+var styleTask = function (stylesPath, srcs) {
+  return gulp.src(srcs.map(function (src) {
       return path.join('app', stylesPath, src);
     }))
     .pipe($.changed(stylesPath, {extension: '.css'}))
@@ -73,7 +64,7 @@ var styleTask = function(stylesPath, srcs) {
     .pipe($.size({title: stylesPath}));
 };
 
-var imageOptimizeTask = function(src, dest) {
+var imageOptimizeTask = function (src, dest) {
   return gulp.src(src)
     .pipe($.imagemin({
       progressive: true,
@@ -83,7 +74,7 @@ var imageOptimizeTask = function(src, dest) {
     .pipe($.size({title: 'images'}));
 };
 
-var optimizeHtmlTask = function(src, dest) {
+var optimizeHtmlTask = function (src, dest) {
   var assets = $.useref.assets({
     searchPath: ['.tmp', 'app']
   });
@@ -112,96 +103,103 @@ var optimizeHtmlTask = function(src, dest) {
     }));
 };
 
+// Backup the GW2 Item list
+
+gulp.task('backup-data', function(){
+  return gulp.src(['app/scripts/itemlist.json'], {
+    dot: true
+  }).pipe(gulp.dest('app/scripts/backup'));
+});
+
+
 // Compile GW2 Item list
-gulp.task('generate-data', function () {
-  var data = ''
-  var output = [];
-  // var writer = fs.createWriteStream('app/scripts/itemlist.json');
-  // writer.write(JSON.stringify(output));
-  // var lookupByNameWriter = fs.createWriteStream('app/scripts/itemtypebyname.json');
-  // lookupByNameWriter.write(JSON.stringify(TypeLookupHash));
-  // var lookupByIdWriter = fs.createWriteStream('app/scripts/itemtypebyid.json');
-  // lookupByIdWriter.write(JSON.stringify(convertTypeHash2Array(TypeLookupHash)));
-  var returnStream =  http_request.get(baseURI + '/v2/items').on('error', function(err){
-    console.log(err)
-  }).pipe(through2.obj(function (chunk, enc, callback){
-    data += chunk;
-    callback();
-  },
-  function(callback){
-    var item_list = JSON.parse(data);
-		var item_id = item_list.pop();
+gulp.task('generate-data', ['backup-data'], function () {
+  var data = '', legendary_recipe_id = -1;
+  var items = require('./app/scripts/backup/itemlist.json');
+  var counter = 0;
+  var item_id_set = new Set();
+  for(var i = 0; i < items.length; i++){
+    item_id_set.add(items[i].id);
+  }
 
-		do {
+  var returnStream = http_request.get(baseURI + '/v2/items').on('error', function (err) {
+    console.log(err);
+  }).pipe(through2.obj(function (chunk, enc, callback) {
+      data += chunk;
+      callback();
+    },
+    function (callback) {
+      var item_list = JSON.parse(data), item_id = item_list.pop();
 
-			this.push(item_id);
-			item_id = item_list.pop();
+      do {
+        if(!item_id_set.has(item_id)) {
+          this.push(item_id);
+          if(counter++ %100 ==0){
+            process.stdout.write('.');
+          }
+        }
+        item_id = item_list.pop();
+      } while (item_list.length > 0);
 
-		}while(item_list.length > 0);
-
-    callback();
-	}
+      callback();
+    }
   )).pipe(through2.obj(
-    function(chunk, enc, callback){
-					http_request.get(baseURI + '/v2/recipes/search?output=' + chunk.toString(), function(error, response, body) {
-						if(error != undefined) {
-							console.log(error);
-							callback();
-							return;
-						}
-						var recipes = JSON.parse(body);
-						if(recipes.length > 0) {
-							var data = {id: chunk};
-            	data.recipe_list = recipes;
-              callback(null, data);
-						}else {
-							callback();
-						}
+    function (data, enc, callback) {
 
-					});
-		}
+      http_request.get(baseURI + '/v2/items/' + data.toString(), function (error, response, body) {
+        if (error !== null) {
+          console.log("ERROR getting items");
+          console.log(error);
+          callback();
+          return;
+        }
+        var item = JSON.parse(body), typeAndSubtype = getItemTypeIdAndSubtypeId(item.type, item.details);
+
+        item.type_id = typeAndSubtype.typeId;
+        item.subtype_id = typeAndSubtype.subTypeId;
+
+        callback(null, item);
+
+      });
+
+    }
   )).pipe(through2.obj(
-    function(data, enc, callback){
+    function (data, enc, callback) {
 
-			http_request.get(baseURI + '/v2/items?ids=' + data.id, function(error, response, body) {
-				if(error != undefined) {
-					console.log("ERROR getting items");
-					console.log(error);
-					callback();
-					return;
-				}
-			  var items = JSON.parse(body);
-				var itemObj = [];
-        for(var counter = 0; counter < items.length; counter++){
-          var item=items[counter];
-         	var typeAndSubtype = getItemTypeIdAndSubtypeId(item.type, item.details);
-					data.name = item.name;
+      http_request.get(baseURI + '/v2/recipes/search?output=' + data.id, function (error, response, body) {
+        if (error !== null) {
+          console.log(error);
+          callback();
+          return;
+        }
+        var recipes = JSON.parse(body);
+        if (recipes.length > 0 || data.rarity === "Legendary") {
+          data.recipe_list = recipes.length === 0 ? [legendary_recipe_id] : recipes;
+          console.log(data.name + " [" + data.id + ", " + data.rarity + "]");
+          callback(null, data);
+        } else {
+          callback();
+        }
 
-          data.type_id = typeAndSubtype.typeId;
-          data.subtype_id = typeAndSubtype.subTypeId;
-
-          console.log(data.name + " [" + data.id + "]");
-					callback(null, data);
-				}
-			});
+      });
 
     }
   ));
 
-  console.log('Creating array');
-  toArray(returnStream, function (err, arr){
-    if(err == undefined){
-      var itemlist_writer =fs.createWriteStream('app/scripts/itemlist.json');
-      console.log('Writing File');
-      itemlist_writer.write(JSON.stringify(arr));
 
+  toArray(returnStream, function (err, arr) {
+    if (err == undefined) {
+      console.log('Creating array');
+      var itemlist_writer = fs.createWriteStream('app/scripts/itemlist2.json');
+      console.log('Writing File');
+      itemlist_writer.write(JSON.stringify(items.concat(arr)));
     }
   });
   return returnStream;
 });
 
 // Compile and automatically prefix stylesheets
-gulp.task('styles', function() {
+gulp.task('styles', function () {
   return styleTask('styles', ['**/*.css']);
 });
 
@@ -209,21 +207,21 @@ gulp.task('styles', function() {
 // Ensure that we are not missing required files for the project
 // "dot" files are specifically tricky due to them being hidden on
 // some systems.
-gulp.task('ensureFiles', function(cb) {
+gulp.task('ensureFiles', function (cb) {
   var requiredFiles = ['.bowerrc'];
 
-  ensureFiles(requiredFiles.map(function(p) {
+  ensureFiles(requiredFiles.map(function (p) {
     return path.join(__dirname, p);
   }), cb);
 });
 
 // Optimize images
-gulp.task('images', function() {
+gulp.task('images', function () {
   return imageOptimizeTask('app/images/**/*', dist('images'));
 });
 
 // Copy all files at the root level (app)
-gulp.task('copy', function() {
+gulp.task('copy', function () {
   var app = gulp.src([
     'app/*',
     '!app/test',
@@ -248,7 +246,7 @@ gulp.task('copy', function() {
 });
 
 // Copy web fonts to dist
-gulp.task('fonts', function() {
+gulp.task('fonts', function () {
   return gulp.src(['app/fonts/**'])
     .pipe(gulp.dest(dist('fonts')))
     .pipe($.size({
@@ -258,7 +256,7 @@ gulp.task('fonts', function() {
 
 // Scan your HTML for assets & optimize them
 
-gulp.task('build', ['images', 'fonts'], function() {
+gulp.task('build', ['images', 'fonts'], function () {
   return gulp.src(['app/**/*.html', '!app/{elements,test,bower_components}/**/*.html'])
     .pipe($.useref())
     .pipe($.if('*.js', $.uglify({
@@ -270,11 +268,11 @@ gulp.task('build', ['images', 'fonts'], function() {
       empty: true,
       spare: true
     })))
-    .pipe(gulp.dest(dist()))
+    .pipe(gulp.dest(dist()));
 });
 
 // Vulcanize granular configuration
-gulp.task('vulcanize', function() {
+gulp.task('vulcanize', function () {
   return gulp.src('app/elements/elements.html')
     .pipe($.vulcanize({
       stripComments: true,
@@ -292,42 +290,41 @@ gulp.task('vulcanize', function() {
 // in your project, please enable it within the 'default' task.
 // See https://github.com/PolymerElements/polymer-starter-kit#enable-service-worker-support
 // for more context.
-gulp.task('cache-config', function(callback) {
-  var dir = dist();
-  var config = {
+gulp.task('cache-config', function (callback) {
+  var dir = dist(), config = {
     cacheId: packageJson.name || path.basename(__dirname),
     disabled: false
   };
 
   glob([
-    'index.html',
-    './',
-    'bower_components/webcomponentsjs/webcomponents-lite.min.js',
-    '{elements,scripts,styles}/**/*.*'],
-    {cwd: dir}, function(error, files) {
-    if (error) {
-      callback(error);
-    } else {
-      config.precache = files;
+      'index.html',
+      './',
+      'bower_components/webcomponentsjs/webcomponents-lite.min.js',
+      '{elements,scripts,styles}/**/*.*'],
+    {cwd: dir}, function (error, files) {
+      if (error) {
+        callback(error);
+      } else {
+        config.precache = files;
 
-      var md5 = crypto.createHash('md5');
-      md5.update(JSON.stringify(config.precache));
-      config.precacheFingerprint = md5.digest('hex');
+        var md5 = crypto.createHash('md5');
+        md5.update(JSON.stringify(config.precache));
+        config.precacheFingerprint = md5.digest('hex');
 
-      var configPath = path.join(dir, 'cache-config.json');
-      fs.writeFile(configPath, JSON.stringify(config), callback);
-    }
-  });
+        var configPath = path.join(dir, 'cache-config.json');
+        fs.writeFile(configPath, JSON.stringify(config), callback);
+      }
+    });
 });
 
 // Clean output directory
-gulp.task('clean', function() {
+gulp.task('clean', function () {
   return del(['.tmp', dist()]);
 });
 
 // Watch files for changes & reload
 
-gulp.task('serve', ['styles'], function() {
+gulp.task('serve', ['styles'], function () {
 
   browserSync({
     port: 5000,
@@ -336,7 +333,7 @@ gulp.task('serve', ['styles'], function() {
     snippetOptions: {
       rule: {
         match: '<span id="browser-sync-binding"></span>',
-        fn: function(snippet) {
+        fn: function (snippet) {
           return snippet;
         }
       }
@@ -358,7 +355,7 @@ gulp.task('serve', ['styles'], function() {
 });
 
 // Build and serve the output from the dist build
-gulp.task('serve:dist', ['default'], function() {
+gulp.task('serve:dist', ['default'], function () {
   browserSync({
     port: 5001,
     notify: false,
@@ -366,7 +363,7 @@ gulp.task('serve:dist', ['default'], function() {
     snippetOptions: {
       rule: {
         match: '<span id="browser-sync-binding"></span>',
-        fn: function(snippet) {
+        fn: function (snippet) {
           return snippet;
         }
       }
@@ -381,7 +378,7 @@ gulp.task('serve:dist', ['default'], function() {
 });
 
 // Build production files, the default task
-gulp.task('default', ['clean'], function(cb) {
+gulp.task('default', ['clean'], function (cb) {
   // Uncomment 'cache-config' if you are going to use service workers.
   runSequence(
     ['ensureFiles', 'copy', 'styles'],
@@ -391,7 +388,7 @@ gulp.task('default', ['clean'], function(cb) {
 });
 
 // Build then deploy to GitHub pages gh-pages branch
-gulp.task('build-deploy-gh-pages', function(cb) {
+gulp.task('build-deploy-gh-pages', function (cb) {
   runSequence(
     'default',
     'deploy-gh-pages',
@@ -439,7 +436,8 @@ var TypeLookupHash = {
       'Unlock': 8,
       'UpgradeRemoval': 9,
       'Utility': 10,
-      'TeleportToFriend': 11    }
+      'TeleportToFriend': 11
+    }
   },
   'Container': {
     typeId: 4, subTypes: {
@@ -463,7 +461,7 @@ var TypeLookupHash = {
       'Default': 0,
       'ContainerKey': 1,
       'RentableContractNpc': 2,
-      'UnlimitedConsumable': 3,
+      'UnlimitedConsumable': 3
     }
   },
   'MiniPet': {typeId: 8},
@@ -484,7 +482,8 @@ var TypeLookupHash = {
       'Sigil': 3
     }
   },
-  'Weapon': { typeId: 14, subTypes: {
+  'Weapon': {
+    typeId: 14, subTypes: {
       'Axe': 0,
       'Dagger': 1,
       'Mace': 2,
@@ -510,11 +509,13 @@ var TypeLookupHash = {
       'TwoHandedToy': 22
     }
   }
-}
+};
 
 var TypeLookupArray = [
-  {  name: 'Armor', subTypes: ['Boots', 'Coat', 'Gloves', 'Helm',
-    'HelmAquatic', 'Leggings', 'Shoulders']},
+  {
+    name: 'Armor', subTypes: ['Boots', 'Coat', 'Gloves', 'Helm',
+    'HelmAquatic', 'Leggings', 'Shoulders']
+  },
   {name: 'Back'},
   {name: 'Bag'},
   {
@@ -535,13 +536,13 @@ var TypeLookupArray = [
     name: 'Weapon', subTypes: ['Axe', 'Dagger', 'Mace', 'Pistol', 'Scepter', 'Sword', 'Focus', 'Shield',
     'Torch', 'Warhorn', 'Greatsword', 'Hammer', 'LongBow', 'Rifle', 'ShortBow', 'Staff', 'Harpoon', 'Speargun',
     'Trident', 'LargeBundle', 'SmallBundle', 'Toy', 'TwoHandedToy']
-  },
-]
+  }
+];
 
-function getItemTypeIdAndSubtypeId(type, details){
+function getItemTypeIdAndSubtypeId(type, details) {
   var rv = {typeId: null, subTypeId: null};
   rv.typeId = TypeLookupHash[type].typeId;
-  if(details != undefined && 'type' in details && 'subTypes' in TypeLookupHash[type]){
+  if (details !== undefined && 'type' in details && 'subTypes' in TypeLookupHash[type]) {
 
     rv.subTypeId = TypeLookupHash[type].subTypes[details.type];
 
@@ -550,17 +551,16 @@ function getItemTypeIdAndSubtypeId(type, details){
 
 }
 
-function getItemTypeAndSubType(typeId, subTypeId){
+function getItemTypeAndSubType(typeId, subTypeId) {
   var rv = {type: null, subType: null};
   rv.type = TypeLookupArray[typeId].name;
-  if(subTypeId != null && 'subTypes' in TypeLookupHash[type]){
+  if (subTypeId !== null && 'subTypes' in TypeLookupHash[type]) {
     rv.subType = TypeLookupHash[typeId].subTypes[subTypeId];
   }
   return rv;
 }
 
 function convertTypeHash2Array(typeHash) {
-  // var returnArray = new Array(Object.keys(typeHash).length);
   var returnArray = [];
 
   for (var typeCounter = 0; typeCounter < Object.keys(typeHash).length; typeCounter++) {
@@ -580,6 +580,6 @@ function convertTypeHash2Array(typeHash) {
     }
     returnArray[typeObject.typeId] = newTypeObject;
   }
-  //console.log(returnArray);
+
   return returnArray;
 }

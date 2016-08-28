@@ -1,11 +1,8 @@
-FROM node:0.10-slim
+FROM darkmane/showcase
 MAINTAINER Sean Chitwood <darkmane@gmail.com>
 
-RUN mkdir -p /var/www
-RUN mkdir -p /var/shared/pids
 
-VOLUME /var/www
-ADD dist /var/www
+ADD dist /var/www/public
 
 WORKDIR /var/www
 
